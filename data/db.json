@@ -1,22 +1,6 @@
 {
-  "products": [
-    {
-      "id": "1774856695900",
-      "name": "shoe",
-      "price": "3234",
-      "stock": "3",
-      "image": "/uploads/products/1774856695892-Capture.PNG"
-    }
-  ],
-  "repairs": [
-    {
-      "id": "1774856672767",
-      "device": "elite version 3",
-      "customer": "sara",
-      "status": "Repairing",
-      "image": "/uploads/repairs/1774856672761-b959785e70ee3cb661cd7fa50296ee4e.webp"
-    }
-  ],
+  "products": [],
+  "repairs": [],
   "customers": [],
   "orders": [],
   "settings": {
