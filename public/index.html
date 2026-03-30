@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechNinja Pro | Responsive Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- Mobile Top Bar -->
+    <div class="mobile-nav">
+        <div class="logo" style="margin:0"><span style="color:var(--accent)">TN</span> Ninja</div>
+        <button class="menu-btn" onclick="toggleSidebar(true)">☰</button>
+    </div>
+
+    <!-- Dark Overlay for Mobile Sidebar & Panel -->
+    <div id="overlay" onclick="closeAll()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="./image/logo.jpg" alt="Logo"> TechNinja
+        </div>
+        <div class="nav-item active" onclick="setView('products', this)">📦 Products</div>
+        <div class="nav-item" onclick="setView('repairs', this)">🔧 Repairs</div>
+        <div class="nav-item" onclick="setView('customers', this)">👤 Customers</div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="header">
+            <h1 id="view-title">Products</h1>
+            <button class="btn-add" onclick="togglePanel(true)">+ Add New Item</button>
+        </div>
+
+        <div class="card">
+            <table id="data-table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Right Side Panel -->
+    <div id="panel" id="side-panel">
+        <h2 id="panel-title" style="margin-bottom:20px;">Add New Item</h2>
+        <form id="data-form" onsubmit="handleSave(event)">
+            <div id="form-content"></div>
+            <button type="submit" class="btn-add" style="width:100%; padding:15px; margin-top:10px;">Save Data</button>
+            <button type="button" onclick="togglePanel(false)" style="width:100%; margin-top:15px; background:none; border:none; color: #ef4444; cursor:pointer;">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        let currentView = 'products';
+
+        // Toggle Sidebar on Mobile
+        function toggleSidebar(show) {
+            document.getElementById('sidebar').classList.toggle('open', show);
+            document.getElementById('overlay').classList.toggle('active', show);
+        }
+
+        // Toggle Right Panel
+        function togglePanel(show) {
+            document.getElementById('panel').classList.toggle('open', show);
+            document.getElementById('overlay').classList.toggle('active', show);
+            if(show) renderForm();
+        }
+
+        function closeAll() {
+            toggleSidebar(false);
+            togglePanel(false);
+        }
+
+        function setView(view, el) {
+            currentView = view;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('view-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
+            if(window.innerWidth <= 992) toggleSidebar(false);
+            loadData();
+        }
+
+        // Form Rendering Logic
+        function renderForm() {
+            const container = document.getElementById('form-content');
+            if(currentView === 'products') {
+                container.innerHTML = `
+                    <label>Product Name</label><input name="name" required>
+                    <label>Price ($)</label><input name="price" type="number" step="0.01">
+                    <label>Stock</label><input name="stock" type="number">
+                    <label>Image</label><input type="file" name="image">
+                `;
+            } else {
+                container.innerHTML = `
+                    <label>Device</label><input name="device" required>
+                    <label>Customer Name</label><input name="customer" required>
+                    <label>Issue</label><input name="issue">
+                    <label>Status</label>
+                    <select name="status"><option>Pending</option><option>Fixed</option></select>
+                `;
+            }
+        }
+
+        // Integration with your existing Backend
+        async function loadData() {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            const items = data[currentView] || [];
+            
+            const thead = document.getElementById('thead');
+            const tbody = document.getElementById('tbody');
+
+            if(currentView === 'products') {
+                thead.innerHTML = `<tr><th>Product</th><th>Price</th><th>Stock</th><th>Action</th></tr>`;
+                tbody.innerHTML = items.map(item => `
+                    <tr>
+                        <td><img src="${item.image}" class="img-thumb">${item.name}</td>
+                        <td>$${item.price}</td>
+                        <td>${item.stock}</td>
+                        <td><button onclick="deleteItem('${item.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button></td>
+                    </tr>
+                `).join('');
+            } else {
+                thead.innerHTML = `<tr><th>Device</th><th>Customer</th><th>Status</th><th>Action</th></tr>`;
+                tbody.innerHTML = items.map(item => `
+                    <tr>
+                        <td><b>${item.device}</b><br><small>${item.issue || ''}</small></td>
+                        <td>${item.customer}</td>
+                        <td>${item.status}</td>
+                        <td><button onclick="deleteItem('${item.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function handleSave(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            await fetch(`/api/${currentView}`, { method: 'POST', body: formData });
+            togglePanel(false);
+            loadData();
+        }
+
+        async function deleteItem(id) {
+            if(confirm('Delete?')) {
+                await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "products": [],
+  "repairs": [],
+  "customers": [],
+  "orders": [],
+  "settings": {
+    "shopName": "Tech Ninja Pro",
+    "currency": "$"
+  }
+}
