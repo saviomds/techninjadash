@@ -85,8 +85,8 @@ function renderTable(items) {
     <table>
         <thead>
             <tr>
-                <th>Name/Item</th>
-                <th>Info</th>
+                <th>Main</th>
+                <th>Details</th>
                 <th>Date</th>
                 <th>Action</th>
             </tr>
@@ -94,20 +94,52 @@ function renderTable(items) {
         <tbody>`;
 
     html += items.map(i => {
-        const name = i.name || i.device || "Unknown";
-        let info = "-";
+        let main = i.name || i.device || "Unknown";
+        let details = "";
 
         if (currentView === 'products') {
-            info = i.price ? `${settingsData.currency} ${i.price}` : 'No Price';
-        } 
+            details = `
+                ${i.category || ''}<br>
+                ${settingsData.currency} ${i.price || 0}<br>
+                Stock: ${i.stock || 0}<br>
+                ${i.description || ''}
+            `;
+        }
+
         else if (currentView === 'repairs') {
-            info = `Cust: ${i.customer || '-'} | ${i.issue || '-'}`;
+            details = `
+                Cust: ${i.customer || ''}<br>
+                Phone: ${i.phone || ''}<br>
+                Issue: ${i.issue || ''}<br>
+                Status: ${i.status || ''}<br>
+                ${settingsData.currency} ${i.price || 0}
+            `;
         }
+
         else if (currentView === 'orders') {
-            info = `${i.customer || 'Guest'} (${settingsData.currency} ${i.price || 0})`;
+            details = `
+                Cust: ${i.customer || ''}<br>
+                Qty: ${i.qty || 1}<br>
+                ${settingsData.currency} ${i.price || 0}<br>
+                Payment: ${i.payment || ''}<br>
+                Status: ${i.status || ''}
+            `;
         }
+
+        else if (currentView === 'customers') {
+            details = `
+                Phone: ${i.phone || ''}<br>
+                Email: ${i.email || ''}<br>
+                ${i.address || ''}
+            `;
+        }
+
         else if (currentView === 'staff') {
-            info = i.role || 'No Role';
+            details = `
+                Role: ${i.role || ''}<br>
+                Phone: ${i.phone || ''}<br>
+                Salary: ${settingsData.currency} ${i.salary || 0}
+            `;
         }
 
         return `
@@ -115,11 +147,11 @@ function renderTable(items) {
             <td>
                 <div class="flex-cell">
                     <img src="${i.image || 'https://via.placeholder.com/50'}" class="img-thumb">
-                    <strong>${name}</strong>
+                    <strong>${main}</strong>
                 </div>
             </td>
-            <td>${info}</td>
-            <td>${i.date}</td>
+            <td>${details}</td>
+            <td>${i.date || '-'}</td>
             <td>
                 <button class="action-btn" onclick="deleteItem('${i.id}')">🗑️</button>
             </td>
@@ -127,7 +159,7 @@ function renderTable(items) {
     }).reverse().join('');
 
     area.innerHTML = html + "</tbody></table>";
-}
+    }
 
 /* ================= SETTINGS ================= */
 
@@ -186,21 +218,48 @@ function renderFormFields() {
     const schemas = {
         products: [
             { label: 'Product Name', key: 'name' },
-            { label: 'Price', key: 'price' }
+            { label: 'Category', key: 'category' },
+            { label: 'Price', key: 'price', type: 'number' },
+            { label: 'Stock Quantity', key: 'stock', type: 'number' },
+            { label: 'Description', key: 'description' }
         ],
+
         repairs: [
-            { label: 'Device', key: 'device' },
-            { label: 'Customer', key: 'customer' },
-            { label: 'Issue', key: 'issue' }
+            { label: 'Device Name', key: 'device' },
+            { label: 'Customer Name', key: 'customer' },
+            { label: 'Phone', key: 'phone' },
+            { label: 'Issue', key: 'issue' },
+            { label: 'Status (Pending/Done)', key: 'status' },
+            { label: 'Cost', key: 'price', type: 'number' },
+            { label: 'Description', key: 'description' }
         ],
+
         orders: [
-            { label: 'Product', key: 'name' },
-            { label: 'Customer', key: 'customer' },
-            { label: 'Amount', key: 'price' }
+            { label: 'Product Name', key: 'name' },
+            { label: 'Customer Name', key: 'customer' },
+            { label: 'Phone', key: 'phone' },
+            { label: 'Quantity', key: 'qty', type: 'number' },
+            { label: 'Total Price', key: 'price', type: 'number' },
+            { label: 'Payment Status', key: 'payment' },
+            { label: 'Order Status', key: 'status' },
+            { label: 'Description', key: 'description' }
         ],
+
+        customers: [
+            { label: 'Full Name', key: 'name' },
+            { label: 'Phone', key: 'phone' },
+            { label: 'Email', key: 'email' },
+            { label: 'Address', key: 'address' },
+            { label: 'Notes', key: 'description' }
+        ],
+
         staff: [
-            { label: 'Name', key: 'name' },
-            { label: 'Role', key: 'role' }
+            { label: 'Full Name', key: 'name' },
+            { label: 'Role', key: 'role' },
+            { label: 'Phone', key: 'phone' },
+            { label: 'Email', key: 'email' },
+            { label: 'Salary', key: 'salary', type: 'number' },
+            { label: 'Notes', key: 'description' }
         ]
     };
 
@@ -208,8 +267,11 @@ function renderFormFields() {
 
     f.innerHTML = fields.map(x => `
         <label>${x.label}</label>
-        <input name="${x.key}" required>
-    `).join('');
+        <input name="${x.key}" type="${x.type || 'text'}" required>
+    `).join('') + `
+        <label>Image (optional)</label>
+        <input type="file" name="image" accept="image/*">
+    `;
 }
 
 /* ================= FORM ================= */

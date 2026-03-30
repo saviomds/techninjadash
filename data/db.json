@@ -2,8 +2,41 @@
   "products": [],
   "repairs": [],
   "orders": [],
-  "customers": [],
-  "staff": [],
+  "customers": [
+    {
+      "id": "TN-9710",
+      "name": "Niyotwilingiye Angelique",
+      "phone": "0785397200",
+      "email": "winstondave161@gmail.com",
+      "address": "kk509 Murama",
+      "description": "Developers",
+      "date": "3/30/2026",
+      "image": "/uploads/customers/1774886192367-user.jpg"
+    },
+    {
+      "id": "TN-1593",
+      "name": "Dushime Emmanuel",
+      "phone": "0789078834",
+      "email": "dushimeemma@gmail.com",
+      "address": "jabana",
+      "description": "Developers",
+      "date": "3/30/2026",
+      "image": "/uploads/customers/1774886229046-techninja.jpg"
+    }
+  ],
+  "staff": [
+    {
+      "id": "TN-2666",
+      "name": "Dominique Savio MANISHIMWE",
+      "role": "Assistance ",
+      "phone": "0786731976",
+      "email": "dominiquesavio2003@gmail.com",
+      "salary": "30000",
+      "description": "Developers",
+      "date": "3/30/2026",
+      "image": "/uploads/staff/1774886117956-user.jpg"
+    }
+  ],
   "settings": {
     "shopName": "Tech Ninja ",
     "currency": "Rs",

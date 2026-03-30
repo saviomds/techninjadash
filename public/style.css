@@ -1,8 +1,10 @@
+/* ================= GLOBAL ================= */
 :root {
     --primary: #0f172a;
     --bg: #f8fafc;
     --border: #e2e8f0;
     --text: #64748b;
+    --card: #ffffff;
 }
 
 * {
@@ -15,6 +17,7 @@
 body {
     background: var(--bg);
     color: var(--primary);
+    line-height: 1.5;
 }
 
 /* ================= LOGIN ================= */
@@ -73,7 +76,6 @@ body {
     object-fit: cover;
 }
 
-/* NAV FIXED */
 nav {
     display: flex;
     flex-direction: column;
@@ -125,7 +127,7 @@ nav {
 /* ================= MAIN ================= */
 .main {
     margin-left: 260px;
-    padding: 40px;
+    padding: 30px;
     width: calc(100% - 260px);
 }
 
@@ -134,12 +136,23 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    gap: 15px;
+}
+
+.header h1 {
+    font-size: 22px;
+    font-weight: 700;
 }
 
 .header-actions {
     display: flex;
     gap: 10px;
+    align-items: center;
+}
+
+#search-bar {
+    min-width: 200px;
 }
 
 /* ================= BUTTON ================= */
@@ -147,10 +160,15 @@ nav {
     background: var(--primary);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-add:hover {
+    opacity: 0.9;
 }
 
 .menu-btn {
@@ -163,10 +181,11 @@ nav {
 /* ================= INPUT ================= */
 input, select {
     width: 100%;
-    padding: 12px;
+    padding: 11px;
     margin-bottom: 15px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
+    font-size: 14px;
 }
 
 input:focus {
@@ -175,9 +194,11 @@ input:focus {
 }
 
 label {
+    display: block;
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
+    margin-bottom: 5px;
 }
 
 /* ================= TABLE ================= */
@@ -188,23 +209,24 @@ label {
 table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 8px;
-    min-width: 600px;
+    border-spacing: 0 10px;
+    min-width: 700px;
 }
 
 th {
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
     color: var(--text);
-    padding: 10px 15px;
+    padding: 8px 15px;
 }
 
 td {
-    background: white;
+    background: var(--card);
     padding: 15px;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
+    vertical-align: middle;
 }
 
 td:first-child {
@@ -217,17 +239,43 @@ td:last-child {
     border-radius: 0 12px 12px 0;
 }
 
+td:nth-child(2) {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+/* Hover effect */
+tr:hover td {
+    background: #f9fafb;
+}
+
+/* ================= IMAGE ================= */
 .img-thumb {
     width: 45px;
     height: 45px;
     border-radius: 10px;
     object-fit: cover;
+    border: 1px solid var(--border);
 }
 
 .flex-cell {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* ================= ACTION ================= */
+.action-btn {
+    background: #fee2e2;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #fecaca;
 }
 
 /* ================= PANEL ================= */
@@ -242,6 +290,16 @@ td:last-child {
     padding: 25px;
     z-index: 2000;
     box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+
+    display: flex;
+    flex-direction: column;
+}
+
+#panel form {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 15px;
+    padding-right: 5px;
 }
 
 #panel.open {
@@ -264,7 +322,7 @@ td:last-child {
 /* ================= SETTINGS ================= */
 .settings-card {
     background: white;
-    padding: 30px;
+    padding: 25px;
     border-radius: 12px;
     border: 1px solid var(--border);
     max-width: 500px;
@@ -282,7 +340,6 @@ td:last-child {
         padding: 20px;
         transition: 0.3s;
         z-index: 2000;
-        border-right: 1px solid var(--border);
     }
 
     .sidebar.open {
@@ -297,33 +354,37 @@ td:last-child {
 
     .header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        align-items: stretch;
     }
 
     .header-actions {
         width: 100%;
+        flex-direction: column;
+    }
+
+    #search-bar {
+        width: 100%;
+    }
+
+    .btn-add {
+        width: 100%;
+    }
+
+    table {
+        min-width: 600px;
     }
 
     #panel {
         width: 100%;
         right: -100%;
     }
-
-    table {
-        min-width: 500px;
-    }
 }
 
 /* ================= SMALL ================= */
 @media (max-width: 480px) {
 
-    .header-actions {
-        flex-direction: column;
-    }
-
-    .btn-add {
-        width: 100%;
+    table {
+        min-width: 500px;
     }
 
     td:nth-child(3),
