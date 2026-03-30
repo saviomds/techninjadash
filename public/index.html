@@ -8,14 +8,12 @@
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-
     <div id="login-screen">
         <div class="login-box">
-            <h2>Tech Ninja Login</h2><br><br>
-            <small>Welcome back Admin</small><br><br>
+            <h2>TechNinja Login</h2><br>
             <form onsubmit="handleLogin(event)">
-                <label>Admin</label><input id="l-user" type="text" required placeholder="Username">
-                <label>Password</label><input id="l-pass" type="password" required placeholder="*********">
+                <label>Admin</label><input id="l-user" type="text" required>
+                <label>Password</label><input id="l-pass" type="password" required>
                 <button type="submit" class="btn-add" style="width:100%">Login</button>
             </form>
         </div>
@@ -24,36 +22,37 @@
     <div id="dashboard" style="display:none;">
         <div id="overlay" onclick="togglePanel(false)"></div>
         <aside class="sidebar">
-            <div class="logo"><img id="shop-logo" src=""><span id="logo-text">TechNinja</span></div>
-            <div class="nav-item active" onclick="switchView('products', this)">📦 Products</div>
-            <div class="nav-item" onclick="switchView('repairs', this)">🔧 Repairs</div>
-            <div class="nav-item" onclick="switchView('orders', this)">🛒 Orders</div>
-            <div class="nav-item" onclick="switchView('customers', this)">👥 Customers</div>
-            <div class="nav-item" onclick="switchView('analytics', this)">📊 Analytics</div>
-            <div class="nav-item" onclick="switchView('staff', this)">👨‍💼 Staff</div>
-
-            <div class="nav-item" onclick="switchView('settings', this)" style="margin-top:auto">⚙️ Settings</div>
-            <div class="nav-item" onclick="logout()" style="color:red">Logout</div>
+            <div class="logo">
+                <img id="shop-logo" src="https://www.instagram.com/techninja.mu/">
+                <span id="logo-text">TechNinja</span>
+            </div>
+            <nav>
+                <div class="nav-item active" onclick="switchView('products', this)">📦 Products</div>
+                <div class="nav-item" onclick="switchView('repairs', this)">🔧 Repairs</div>
+                <div class="nav-item" onclick="switchView('orders', this)">🛒 Orders</div>
+                <div class="nav-item" onclick="switchView('customers', this)">👥 Customers</div>
+                <div class="nav-item" onclick="switchView('staff', this)">👨‍💼 Staff</div>
+                <div class="nav-item" onclick="switchView('settings', this)" style="margin-top:20px; border-top:1px solid #eee">⚙️ Settings</div>
+                <div class="nav-item" onclick="logout()" style="color:#ef4444">Logout</div>
+            </nav>
         </aside>
+
         <main class="main">
             <div class="header">
-                <h1 id="view-title">Products</h1>
-                <button id="add-btn" class="btn-add" onclick="togglePanel(true)">+ Add</button>
-            </div>
-            <div id="content-area">
-                <div class="card">
-                    <table>
-                        <thead id="table-header"></thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
+                <h1 id="view-title">Dashboard</h1>
+                <div class="header-actions">
+                    <input type="text" id="search-bar" placeholder="Search..." oninput="handleSearch()">
+                    <button id="add-btn" class="btn-add" onclick="togglePanel(true)">+ Add New</button>
                 </div>
             </div>
+            <div id="content-area"></div>
         </main>
+
         <div id="panel">
             <h2 id="p-title">Add New</h2>
             <form id="main-form" onsubmit="handleForm(event)">
                 <div id="f-fields"></div>
-                <button type="submit" id="save-btn" class="btn-add" style="width:100%; margin-top:10px;">Save</button>
+                <button type="submit" class="btn-add" style="width:100%; margin-top:20px;">Save Entry</button>
             </form>
         </div>
     </div>

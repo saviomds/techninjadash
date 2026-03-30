@@ -1,7 +1,54 @@
 :root { --primary: #0f172a; --bg: #f8fafc; --border: #e2e8f0; --text: #64748b; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 body { background: var(--bg); color: var(--primary); }
+/* Settings Page Styling */
+.settings-card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    max-width: 500px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
 
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* Table Polish */
+.table-container {
+    background: transparent;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px; /* Space between rows */
+}
+
+td {
+    background: white;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+td:first-child {
+    border-left: 1px solid var(--border);
+    border-radius: 12px 0 0 12px;
+}
+
+td:last-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 12px 12px 0;
+}
+
+th {
+    padding: 10px 20px;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
 #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
 .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; }
 
@@ -41,3 +88,36 @@ label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; c
     .main { margin-left: 0; width: 100%; padding: 20px; }
     #panel { width: 100%; right: -100%; }
 }
+/* Add to your existing CSS */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.card.stat {
+    padding: 30px;
+    text-align: center;
+    border-left: 5px solid var(--primary);
+}
+
+.card.stat h3 { color: var(--text); font-size: 14px; text-transform: uppercase; margin-bottom: 10px; }
+.card.stat h1 { font-size: 32px; color: var(--primary); }
+
+.flex-cell { display: flex; align-items: center; gap: 12px; }
+
+.action-btn { background: #fee2e2; color: #dc2626; border: none; padding: 6px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.action-btn:hover { background: #fecaca; }/* Add/Update these specific parts in your style.css */
+
+table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+th { text-align: left; color: var(--text); font-size: 13px; text-transform: uppercase; padding: 10px 20px; }
+td { background: white; padding: 15px 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+td:first-child { border-left: 1px solid var(--border); border-radius: 12px 0 0 12px; }
+td:last-child { border-right: 1px solid var(--border); border-radius: 0 12px 12px 0; }
+
+.card { background: transparent; border: none; padding: 0; } /* Let the table rows act as cards */
+
+.flex-cell img { width: 45px; height: 45px; border-radius: 10px; margin-right: 15px; }
+
+input:focus { outline: 2px solid var(--primary); border-color: transparent; }

@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+
 const app = express();
 
 app.use(express.json());
@@ -10,85 +11,142 @@ app.use('/uploads', express.static('uploads'));
 
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
-// Ensure Folders Exist
-if (!fs.existsSync(path.join(__dirname, 'data'))) fs.mkdirSync(path.join(__dirname, 'data'));
-if (!fs.existsSync(DB_PATH)) {
-    fs.writeFileSync(DB_PATH, JSON.stringify({
-        products: [], repairs: [], settings: { shopName: "Tech Ninja", currency: "Rs", logo: "./image/logo.jpg" },
-        user: { username: "admin", password: "123" }
-    }, null, 2));
-}
+// INIT DB
+const initDB = () => {
+    if (!fs.existsSync(path.join(__dirname, 'data'))) {
+        fs.mkdirSync(path.join(__dirname, 'data'));
+    }
 
-const readDB = () => JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-const writeDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    if (!fs.existsSync(DB_PATH)) {
+        const initialData = {
+            products: [],
+            repairs: [],
+            orders: [],
+            customers: [],
+            staff: [],
+            settings: { shopName: "Tech Ninja Pro", currency: "Rs", logo: "/image/logo.jpg" },
+            user: { username: "admin", password: "123" }
+        };
+        fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
+    }
+};
+initDB();
 
+// SAFE READ
+const readDB = () => {
+    try {
+        return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    } catch (err) {
+        console.error("DB Error:", err);
+        return {
+            products: [], repairs: [], orders: [], customers: [], staff: [],
+            settings: { shopName: "Tech Ninja", currency: "Rs", logo: "/image/logo.jpg" },
+            user: { username: "admin", password: "123" }
+        };
+    }
+};
+
+// ENSURE STRUCTURE
+const ensureStructure = (db) => ({
+    products: db.products || [],
+    repairs: db.repairs || [],
+    orders: db.orders || [],
+    customers: db.customers || [],
+    staff: db.staff || [],
+    settings: db.settings || { shopName: "Tech Ninja", currency: "Rs", logo: "/image/logo.jpg" },
+    user: db.user || { username: "admin", password: "123" }
+});
+
+const writeDB = (data) => {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+};
+
+// UPLOAD
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const p = `./uploads/${req.params.type || 'general'}`;
-        if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
-        cb(null, p);
+        const type = req.params.type || 'general';
+        const dir = path.join(__dirname, 'uploads', type);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
     },
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
 });
 const upload = multer({ storage });
 
-// AUTH
+// LOGIN
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const db = readDB();
-    if (db.user && username === db.user.username && password === db.user.password) {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ success: false });
+
+    if (username === db.user.username && password === db.user.password) {
+        return res.json({ success: true });
     }
+    res.status(401).json({ success: false });
 });
 
-// GET ALL DATA
-app.get('/api/data', (req, res) => res.json(readDB()));
+// GET DATA
+app.get('/api/data', (req, res) => {
+    const db = ensureStructure(readDB());
+    res.json(db);
+});
 
-// SETTINGS UPDATE (Handles Logo Upload)
+// SETTINGS
 app.post('/api/settings', upload.single('logo'), (req, res) => {
     const db = readDB();
-    db.settings.shopName = req.body.shopName || db.settings.shopName;
-    db.settings.currency = req.body.currency || db.settings.currency;
-    if (req.file) db.settings.logo = `/uploads/general/${req.file.filename}`;
-    if (req.body.newPassword) db.user.password = req.body.newPassword;
+    const { shopName, currency, password } = req.body;
+
+    if (shopName) db.settings.shopName = shopName;
+    if (currency) db.settings.currency = currency;
+    if (password) db.user.password = password;
+
+    if (req.file) {
+        db.settings.logo = `/uploads/general/${req.file.filename}`;
+    }
+
     writeDB(db);
     res.json({ success: true });
 });
 
-// ADD ITEM (Products or Repairs)
+// CREATE
 app.post('/api/:type', upload.single('image'), (req, res) => {
     const { type } = req.params;
     const db = readDB();
-    const isDup = db[type].some(i => (i.name || i.device) === (req.body.name || req.body.device));
-    if (isDup) return res.status(400).json({ error: "Duplicate Entry" });
 
-    const newItem = { 
-        id: Date.now().toString(), 
-        ...req.body, 
-        image: req.file ? `/uploads/${type}/${req.file.filename}` : 'https://via.placeholder.com/50' 
+    if (!db[type] || !Array.isArray(db[type])) {
+        return res.status(404).json({ error: "Invalid type" });
+    }
+
+    const newItem = {
+        id: "TN-" + Math.floor(1000 + Math.random() * 9000),
+        name: req.body.name || req.body.device || "Unnamed",
+        ...req.body,
+        date: new Date().toLocaleDateString(),
+        image: req.file ? `/uploads/${type}/${req.file.filename}` : 'https://via.placeholder.com/50'
     };
+
     db[type].push(newItem);
     writeDB(db);
     res.json(newItem);
 });
 
-// DELETE ITEM + IMAGE
+// DELETE
 app.delete('/api/:type/:id', (req, res) => {
     const { type, id } = req.params;
     const db = readDB();
-    const idx = db[type].findIndex(i => i.id === id);
-    if (idx !== -1) {
-        const item = db[type][idx];
-        if (item.image && item.image.startsWith('/uploads')) {
-            const filePath = path.join(__dirname, item.image.replace(/^\//, ''));
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        }
-        db[type].splice(idx, 1);
-        writeDB(db);
-        res.sendStatus(200);
-    } else res.status(404).send("Not found");
+
+    const item = db[type]?.find(i => i.id === id);
+
+    if (item && item.image && !item.image.startsWith('http')) {
+        const imgPath = path.join(__dirname, item.image.replace(/^\//, ''));
+        if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+    }
+
+    db[type] = db[type].filter(i => i.id !== id);
+    writeDB(db);
+
+    res.sendStatus(200);
 });
 
-app.listen(3000, () => console.log("🚀 Server: http://localhost:3000"));
+app.listen(3000, () => console.log("🚀 http://localhost:3000"));

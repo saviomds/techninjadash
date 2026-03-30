@@ -1,12 +1,39 @@
 {
   "products": [],
   "repairs": [],
-  "customers": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": "TN-2653",
+      "name": "Iphone 11",
+      "customer": "sara",
+      "price": "400",
+      "date": "3/30/2026",
+      "image": "/uploads/orders/1774862632328-b959785e70ee3cb661cd7fa50296ee4e.webp"
+    }
+  ],
+  "customers": [
+    {
+      "id": "TN-2111",
+      "name": "idempotent",
+      "phone": "0789078834",
+      "date": "3/30/2026",
+      "image": "/uploads/customers/1774862211649-user.jpg"
+    }
+  ],
+  "staff": [
+    {
+      "id": "TN-7049",
+      "name": "Dominique",
+      "role": "Assistance ",
+      "phone": "0789078834",
+      "date": "3/30/2026",
+      "image": "/uploads/staff/1774862196577-user.jpg"
+    }
+  ],
   "settings": {
     "shopName": "Tech Ninja Pro",
-    "currency": "rs",
-    "logo": "/uploads/general/1774856915555-techninja.jpg"
+    "currency": "Rs",
+    "logo": "/uploads/general/1774861860406-techninja.jpg"
   },
   "user": {
     "username": "admin",
