@@ -300,7 +300,10 @@ function handleSearch() {
 function handleLogin(e) {
     e.preventDefault();
 
-    if (l-user.value === "admin" && l-pass.value === "1234") {
+    const user = document.getElementById('l-user').value;
+    const pass = document.getElementById('l-pass').value;
+
+    if (user === "admin" && pass === "1234") {
         localStorage.setItem('ninja_auth', 'true');
         location.reload();
     } else {
