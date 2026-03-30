@@ -1,8 +1,33 @@
+/* ================= SIDEBAR ================= */
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('overlay');
+
+    // Mobile behavior (slide)
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    } 
+    // Desktop behavior (collapse)
+    else {
+        sidebar.classList.toggle('collapsed');
+    }
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+/* ================= GLOBAL STATE ================= */
+
 let currentView = 'products';
 let allItems = [];
 let settingsData = { shopName: 'TechNinja', currency: 'Rs', logo: './image/logo.jpg' };
 
-// AUTO LOGIN & INIT
+/* ================= INIT ================= */
+
 window.onload = () => {
     if (localStorage.getItem('ninja_auth')) {
         document.getElementById('login-screen').style.display = 'none';
@@ -11,54 +36,71 @@ window.onload = () => {
     }
 };
 
-// FETCH DATA ROUTER
+/* ================= FETCH ================= */
+
 async function fetchData() {
     try {
         const res = await fetch('/api/data');
         const data = await res.json();
-        
-        // Update Global Settings UI
+
+        // Settings sync
         settingsData = data.settings;
         document.getElementById('shop-logo').src = settingsData.logo;
         document.getElementById('logo-text').innerText = settingsData.shopName;
 
         const area = document.getElementById('content-area');
-        area.innerHTML = ""; // Clear area to prevent data leaking between views
+        area.innerHTML = "";
 
         if (currentView === 'settings') {
-            renderSettingsPage(); 
+            renderSettingsPage();
         } else {
             allItems = data[currentView] || [];
             renderTable(allItems);
         }
+
     } catch (err) {
         console.error("Fetch Error:", err);
     }
 }
 
-// TABLE RENDERER
+/* ================= TABLE ================= */
+
 function renderTable(items) {
     const area = document.getElementById('content-area');
     document.getElementById('view-title').innerText = currentView.toUpperCase();
-    
-    let html = `<table><thead><tr><th>Name/Item</th><th>Info/Details</th><th>Date</th><th>Action</th></tr></thead><tbody>`;
-    
+
+    if (!items.length) {
+        area.innerHTML = "<p>No data found</p>";
+        return;
+    }
+
+    let html = `
+    <table>
+        <thead>
+            <tr>
+                <th>Name/Item</th>
+                <th>Info</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
     html += items.map(i => {
-        const displayName = i.name || i.device || "Unknown Item";
-        let displayInfo = "-";
+        const name = i.name || i.device || "Unknown";
+        let info = "-";
 
         if (currentView === 'products') {
-            displayInfo = i.price ? `${settingsData.currency} ${i.price}` : 'No Price';
+            info = i.price ? `${settingsData.currency} ${i.price}` : 'No Price';
         } 
         else if (currentView === 'repairs') {
-            displayInfo = `Cust: ${i.customer || 'N/A'} | ${i.issue || 'No Issue'}`;
+            info = `Cust: ${i.customer || '-'} | ${i.issue || '-'}`;
         }
         else if (currentView === 'orders') {
-            const price = i.price ? `${settingsData.currency} ${i.price}` : 'Free';
-            displayInfo = `Bought by: ${i.customer || 'Guest'} (${price})`;
+            info = `${i.customer || 'Guest'} (${settingsData.currency} ${i.price || 0})`;
         }
         else if (currentView === 'staff') {
-            displayInfo = i.role || 'No Role Assigned';
+            info = i.role || 'No Role';
         }
 
         return `
@@ -66,22 +108,25 @@ function renderTable(items) {
             <td>
                 <div class="flex-cell">
                     <img src="${i.image}" class="img-thumb" onerror="this.src='https://via.placeholder.com/50'">
-                    <strong>${displayName}</strong>
+                    <strong>${name}</strong>
                 </div>
             </td>
-            <td>${displayInfo}</td>
+            <td>${info}</td>
             <td>${i.date}</td>
-            <td><button class="action-btn" onclick="deleteItem('${i.id}')">🗑️</button></td>
+            <td>
+                <button class="action-btn" onclick="deleteItem('${i.id}')">🗑️</button>
+            </td>
         </tr>`;
     }).reverse().join('');
-    
+
     area.innerHTML = html + "</tbody></table>";
 }
 
-// SETTINGS PAGE RENDERER
+/* ================= SETTINGS ================= */
+
 function renderSettingsPage() {
     const area = document.getElementById('content-area');
-    document.getElementById('view-title').innerText = "SYSTEM SETTINGS";
+    document.getElementById('view-title').innerText = "SETTINGS";
 
     area.innerHTML = `
         <div class="settings-card">
@@ -89,123 +134,150 @@ function renderSettingsPage() {
             <form onsubmit="handleSettingsUpdate(event)">
                 <label>Shop Name</label>
                 <input type="text" name="shopName" value="${settingsData.shopName}" required>
-                
-                <label>Currency Symbol</label>
+
+                <label>Currency</label>
                 <input type="text" name="currency" value="${settingsData.currency}" required>
-                
-                <label>Update Admin Password</label>
-                <input type="password" name="password" placeholder="Leave blank to keep current">
-                
-                <label>Shop Logo</label>
-                <input type="file" name="logo" accept="image/*">
-                
-                <button type="submit" class="btn-add" style="width:100%; margin-top:10px;">Save All Settings</button>
+
+                <label>New Password</label>
+                <input type="password" name="password" placeholder="Leave blank to keep">
+
+                <label>Logo</label>
+                <input type="file" name="logo">
+
+                <button class="btn-add">Save Settings</button>
             </form>
-        </div>
-    `;
+        </div>`;
 }
 
-// FORM FIELD GENERATOR (FOR PANEL)
+/* ================= NAVIGATION ================= */
+
+function switchView(v, el) {
+    currentView = v;
+
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+
+    document.getElementById('add-btn').style.display = (v === 'settings') ? 'none' : 'block';
+
+    // Close sidebar on mobile after click
+    closeSidebar();
+
+    fetchData();
+}
+
+/* ================= PANEL ================= */
+
+function togglePanel(show) {
+    if (show) renderFormFields();
+
+    document.getElementById('panel').classList.toggle('open', show);
+    document.getElementById('overlay').classList.toggle('active', show);
+}
+
 function renderFormFields() {
-    const container = document.getElementById('f-fields');
+    const f = document.getElementById('f-fields');
+
     const schemas = {
         products: [
             { label: 'Product Name', key: 'name' },
             { label: 'Price', key: 'price' }
         ],
         repairs: [
-            { label: 'Device Model', key: 'device' },
-            { label: 'Customer Name', key: 'customer' },
+            { label: 'Device', key: 'device' },
+            { label: 'Customer', key: 'customer' },
             { label: 'Issue', key: 'issue' }
         ],
         orders: [
-            { label: 'Item/Product Sold', key: 'name' }, 
-            { label: 'Customer Name', key: 'customer' },
-            { label: 'Total Amount', key: 'price' }
+            { label: 'Product', key: 'name' },
+            { label: 'Customer', key: 'customer' },
+            { label: 'Amount', key: 'price' }
         ],
         staff: [
-            { label: 'Staff Name', key: 'name' },
+            { label: 'Name', key: 'name' },
             { label: 'Role', key: 'role' }
         ]
     };
 
-    const currentSchema = schemas[currentView] || [];
-    
-    container.innerHTML = currentSchema.map(field => `
-        <div class="form-group">
-            <label>${field.label}</label>
-            <input name="${field.key}" type="text" required placeholder="Enter ${field.label}...">
-        </div>
-    `).join('') + `<label>Upload Photo</label><input name="image" type="file">`;
+    const fields = schemas[currentView] || [];
+
+    f.innerHTML = fields.map(x => `
+        <label>${x.label}</label>
+        <input name="${x.key}" required>
+    `).join('') + `
+        <label>Image</label>
+        <input type="file" name="image">
+    `;
 }
 
-// ACTIONS & HANDLERS
+/* ================= API ================= */
+
+async function handleForm(e) {
+    e.preventDefault();
+
+    await fetch(`/api/${currentView}`, {
+        method: 'POST',
+        body: new FormData(e.target)
+    });
+
+    togglePanel(false);
+    fetchData();
+}
+
 async function handleSettingsUpdate(e) {
     e.preventDefault();
-    const btn = e.target.querySelector('button');
-    const originalText = btn.innerText;
-    btn.innerText = "Saving...";
-    btn.disabled = true;
-    
+
     await fetch('/api/settings', {
         method: 'POST',
         body: new FormData(e.target)
     });
 
-    alert("Settings saved successfully!");
-    location.reload(); 
-}
-
-async function handleForm(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button');
-    btn.disabled = true; 
-
-    await fetch(`/api/${currentView}`, { method: 'POST', body: new FormData(e.target) });
-    
-    btn.disabled = false;
-    togglePanel(false);
-    fetchData();
-}
-
-function switchView(v, el) {
-    currentView = v;
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-
-    const addBtn = document.getElementById('add-btn');
-    addBtn.style.display = (v === 'settings') ? 'none' : 'block';
-
-    fetchData();
-}
-
-function togglePanel(show) {
-    if (show) renderFormFields();
-    document.getElementById('panel').classList.toggle('open', show);
-    document.getElementById('overlay').classList.toggle('active', show);
+    alert("Saved!");
+    location.reload();
 }
 
 async function deleteItem(id) {
-    if (confirm("Are you sure you want to delete this?")) {
+    if (confirm("Delete?")) {
         await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
         fetchData();
     }
 }
 
+/* ================= SEARCH ================= */
+
+function handleSearch() {
+    const term = document.getElementById('search-bar').value.toLowerCase();
+
+    const filtered = allItems.filter(i =>
+        Object.values(i).some(v =>
+            String(v).toLowerCase().includes(term)
+        )
+    );
+
+    renderTable(filtered);
+}
+
+/* ================= AUTH ================= */
+
 async function handleLogin(e) {
     e.preventDefault();
+
     const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            username: document.getElementById('l-user').value, 
-            password: document.getElementById('l-pass').value 
+        body: JSON.stringify({
+            username: l-user.value,
+            password: l-pass.value
         })
     });
-    if ((await res.json()).success) {
+
+    const data = await res.json();
+
+    if (data.success) {
         localStorage.setItem('ninja_auth', 'true');
         location.reload();
-    } else alert("Invalid Login Credentials");
+    } else {
+        alert("Invalid credentials");
+    }
 }
 
 function logout() {
