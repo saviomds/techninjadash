@@ -1,88 +1,141 @@
 let currentView = 'products';
-let editingId = null;
+let curr = '$';
 
-// Switch between Dashboard, Products, Repairs, etc.
-function switchView(view) {
+// --- AUTH ---
+async function handleLogin(e) {
+    e.preventDefault();
+    const res = await fetch('/api/login', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            username: document.getElementById('l-user').value, 
+            password: document.getElementById('l-pass').value
+        })
+    });
+    if(res.ok) { localStorage.setItem('ninja', 't'); init(); } else alert('Invalid Credentials');
+}
+
+function logout() { localStorage.removeItem('ninja'); location.reload(); }
+
+function init() {
+    if(localStorage.getItem('ninja') === 't') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+        fetchData();
+    }
+}
+
+// --- NAVIGATION ---
+function switchView(view, el) {
     currentView = view;
-    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-    // Update UI Header
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    if(el) el.classList.add('active');
     document.getElementById('view-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
+    document.getElementById('add-btn').style.display = view === 'settings' ? 'none' : 'block';
     fetchData();
 }
 
+// --- DATA ---
 async function fetchData() {
-    try {
-        const res = await fetch('/api/data');
-        const data = await res.json();
-        
-        // Handle Summary Stats if on 'Dashboard' view
-        if (currentView === 'dashboard') {
-            renderDashboardSummary(data);
-        } else {
-            const list = (data[currentView] || []).filter(item => item !== null);
-            renderTable(list);
-        }
-    } catch (err) { console.error("Load Error:", err); }
+    const res = await fetch('/api/data');
+    const data = await res.json();
+    document.getElementById('logo-text').innerText = data.settings.shopName;
+    curr = data.settings.currency;
+
+    if (currentView === 'settings') {
+        renderSettings(data.settings);
+    } else {
+        renderTable(data[currentView] || []);
+    }
 }
 
 function renderTable(items) {
-    const tableHeader = document.getElementById('table-header');
-    const tableBody = document.getElementById('table-body');
+    const header = document.getElementById('table-header');
+    const body = document.getElementById('table-body');
     
-    // Dynamic Headers based on view
-    if (currentView === 'products') {
-        tableHeader.innerHTML = `<tr><th>Product</th><th>Price</th><th>Stock</th><th>Action</th></tr>`;
-    } else if (currentView === 'repairs') {
-        tableHeader.innerHTML = `<tr><th>Device</th><th>Customer</th><th>Status</th><th>Action</th></tr>`;
-    }
+    header.innerHTML = currentView === 'products' 
+        ? `<tr><th>Product</th><th>Price</th><th>Stock</th><th>Action</th></tr>`
+        : `<tr><th>Device</th><th>Customer</th><th>Status</th><th>Action</th></tr>`;
 
-    tableBody.innerHTML = items.map(item => `
+    body.innerHTML = items.map(i => `
         <tr>
             <td>
-                <div class="product-cell">
-                    <img src="${item.image}" class="product-img" onerror="this.src='https://via.placeholder.com/50'">
-                    <div>
-                        <div class="bold">${item.name || item.device}</div>
-                        <div class="tiny">ID: ${String(item.id).slice(-5)}</div>
-                    </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    ${i.image ? `<img src="${i.image}" style="width:40px;height:40px;border-radius:5px;object-fit:cover;">` : ''}
+                    <b>${i.name || i.device}</b>
                 </div>
             </td>
-            <td>${currentView === 'products' ? '$' + item.price : item.customer}</td>
-            <td>${currentView === 'products' ? item.stock : `<span class="badge">${item.status || 'Pending'}</span>`}</td>
-            <td style="text-align: right;">
-                <button class="action-btn" onclick="prepareEdit('${item.id}')">✏️</button>
-                <button class="action-btn" onclick="deleteItem('${item.id}')">🗑️</button>
-            </td>
+            <td>${currentView === 'products' ? curr + i.price : i.customer}</td>
+            <td>${currentView === 'products' ? i.stock : i.status}</td>
+            <td><button onclick="deleteItem('${i.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
         </tr>
     `).reverse().join('');
 }
 
-// Handle Form Submission (Add/Edit)
+function renderSettings(s) {
+    document.getElementById('content-area').innerHTML = `
+        <div class="card">
+            <form onsubmit="saveSettings(event)" style="max-width:400px">
+                <label>Shop Name</label><input name="shopName" value="${s.shopName}" required>
+                <label>Currency</label><input name="currency" value="${s.currency}" required>
+                <label>New Password</label><input name="newPassword" type="password" placeholder="Keep blank to stay same">
+                <button type="submit" class="btn-add">Update Settings</button>
+            </form>
+        </div>`;
+}
+
+// --- ACTIONS ---
 async function handleForm(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const url = editingId ? `/api/${currentView}/${editingId}` : `/api/${currentView}`;
-    const method = editingId ? 'PUT' : 'POST';
+    const btn = document.getElementById('save-btn');
+    if(btn.disabled) return; // Prevent double click
 
-    // If PUT, we convert FormData to JSON because Multer is usually for POST
-    let body = formData;
-    let headers = {};
-    
-    if (editingId) {
-        method = 'PUT';
-        const json = Object.fromEntries(formData.entries());
-        body = JSON.stringify(json);
-        headers = { 'Content-Type': 'application/json' };
+    btn.disabled = true;
+    btn.innerText = "Saving...";
+
+    const formData = new FormData(e.target);
+    const res = await fetch(`/api/${currentView}`, { method: 'POST', body: formData });
+
+    if(res.ok) {
+        e.target.reset();
+        togglePanel(false);
+        fetchData();
+    } else if(res.status === 409) {
+        alert("Item already exists!");
     }
 
-    await fetch(url, { method, body, headers });
-    editingId = null;
-    toggleSlide(false);
-    fetchData();
+    btn.disabled = false;
+    btn.innerText = "Save Data";
+}
+
+async function saveSettings(e) {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    await fetch('/api/settings', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify(d) 
+    });
+    alert('Settings Updated');
+    switchView('products');
 }
 
 async function deleteItem(id) {
-    if (!confirm("Are you sure?")) return;
-    await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
-    fetchData();
+    if(confirm('Delete this item?')) {
+        await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
+        fetchData();
+    }
 }
+
+function togglePanel(show) {
+    document.getElementById('panel').classList.toggle('open', show);
+    document.getElementById('overlay').classList.toggle('active', show);
+    if(show) {
+        const f = document.getElementById('f-fields');
+        f.innerHTML = currentView === 'products' 
+            ? `<label>Name</label><input name="name" required><label>Price</label><input name="price" type="number" required><label>Stock</label><input name="stock" type="number" required><label>Img</label><input type="file" name="image">` 
+            : `<label>Device</label><input name="device" required><label>Customer</label><input name="customer" required><label>Status</label><select name="status"><option>Pending</option><option>Fixed</option></select>`;
+    }
+}
+
+window.onload = init;

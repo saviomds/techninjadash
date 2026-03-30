@@ -3,157 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | TechNinja</title>
+    <title>TechNinja Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-    <div id="overlay" onclick="closeAll()"></div>
-
-    <aside class="sidebar">
-        <div class="logo">
-            <img src="./image/techninja.jpg" alt="Logo"> 
-            <span id="shop-name-display">TechNinja</span>
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Ninja Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <label>User</label><input id="l-user" type="text" required>
+                <label>Pass</label><input id="l-pass" type="password" required>
+                <button type="submit" class="btn-add" style="width:100%">Login</button>
+            </form>
         </div>
-        <div class="nav-item active" onclick="setView('products', this)">📦 Products</div>
-        <div class="nav-item" onclick="setView('repairs', this)">🔧 Repairs</div>
-        <div class="nav-item" onclick="setView('customers', this)">👤 Customers</div>
-        <div class="nav-item" onclick="setView('settings', this)" style="margin-top: auto;">⚙️ Settings</div>
-    </aside>
-
-    <main class="main">
-        <div class="header">
-            <h1 id="view-title">Products</h1>
-            <button id="add-btn" class="btn-add" onclick="togglePanel(true)">+ Add New</button>
-        </div>
-        <div id="content-area"></div>
-    </main>
-
-    <div id="panel">
-        <h2 id="panel-title" style="margin-bottom:20px">Add New</h2>
-        <form id="data-form" onsubmit="handleSave(event)">
-            <div id="form-fields"></div>
-            <button type="submit" id="save-btn" class="btn-add" style="width:100%; padding:15px">Save Data</button>
-        </form>
     </div>
 
-    <script>
-        let currentView = 'products';
-        let globalCurrency = '$';
-
-        async function loadData() {
-            const res = await fetch('/api/data');
-            const data = await res.json();
-            
-            if (data.settings) {
-                document.getElementById('shop-name-display').innerText = data.settings.shopName || "TechNinja";
-                globalCurrency = data.settings.currency || "$";
-            }
-
-            const container = document.getElementById('content-area');
-            if (currentView === 'settings') {
-                renderSettings(data.settings || {});
-            } else {
-                renderTable(data[currentView] || []);
-            }
-        }
-
-        function setView(view, el) {
-            currentView = view;
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('view-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
-            document.getElementById('add-btn').style.display = view === 'settings' ? 'none' : 'block';
-            loadData();
-        }
-
-        function renderTable(items) {
-            const container = document.getElementById('content-area');
-            let html = `<div class="card"><table><thead><tr>`;
-            if(currentView === 'products') {
-                html += `<th>Item</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead><tbody>`;
-                html += items.map(i => `<tr><td><img src="${i.image}" class="img-thumb">${i.name}</td><td>${globalCurrency}${i.price}</td><td>${i.stock}</td><td><button onclick="deleteItem('${i.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button></td></tr>`).join('');
-            } else {
-                html += `<th>Device</th><th>Customer</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
-                html += items.map(i => `<tr><td>${i.device}</td><td>${i.customer}</td><td>${i.status}</td><td><button onclick="deleteItem('${i.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button></td></tr>`).join('');
-            }
-            container.innerHTML = html + `</tbody></table></div>`;
-        }
-
-        function renderSettings(s) {
-            document.getElementById('content-area').innerHTML = `
+    <div id="dashboard" style="display:none;">
+        <div id="overlay" onclick="togglePanel(false)"></div>
+        <aside class="sidebar">
+            <div class="logo"><img src="./image/logo.jpg"><span id="logo-text">TechNinja</span></div>
+            <div class="nav-item active" onclick="switchView('products', this)">📦 Products</div>
+            <div class="nav-item" onclick="switchView('repairs', this)">🔧 Repairs</div>
+            <div class="nav-item" onclick="switchView('settings', this)" style="margin-top:auto">⚙️ Settings</div>
+            <div class="nav-item" onclick="logout()" style="color:red">Logout</div>
+        </aside>
+        <main class="main">
+            <div class="header">
+                <h1 id="view-title">Products</h1>
+                <button id="add-btn" class="btn-add" onclick="togglePanel(true)">+ Add</button>
+            </div>
+            <div id="content-area">
                 <div class="card">
-                    <form onsubmit="handleSaveSettings(event)" style="max-width:400px">
-                        <label>Shop Name</label>
-                        <input name="shopName" value="${s.shopName || ''}">
-                        <label>Currency Symbol</label>
-                        <input name="currency" value="${s.currency || '$'}">
-                        <button type="submit" id="settings-save-btn" class="btn-add">Save Configuration</button>
-                    </form>
-                </div>`;
-        }
+                    <table>
+                        <thead id="table-header"></thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        
+        <div id="panel">
+            <h2 id="p-title">Add New</h2>
+            <form id="main-form" onsubmit="handleForm(event)">
+                <div id="f-fields"></div>
+                <button type="submit" id="save-btn" class="btn-add" style="width:100%; margin-top:10px;">Save Data</button>
+            </form>
+        </div>
+    </div>
 
-        async function handleSaveSettings(e) {
-            e.preventDefault();
-            const btn = document.getElementById('settings-save-btn');
-            btn.disabled = true;
-            const data = Object.fromEntries(new FormData(e.target));
-            const res = await fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if (res.ok) {
-                alert("Settings Updated!");
-                await loadData();
-            }
-            btn.disabled = false;
-        }
-
-        async function handleSave(e) {
-            e.preventDefault();
-            const btn = document.getElementById('save-btn');
-            if(btn.disabled) return;
-            
-            btn.disabled = true;
-            btn.innerText = "Saving...";
-            
-            const formData = new FormData(e.target);
-            const res = await fetch(`/api/${currentView}`, { method: 'POST', body: formData });
-            
-            if(res.status === 409) alert("This item already exists!");
-            
-            btn.disabled = false;
-            btn.innerText = "Save Data";
-            togglePanel(false);
-            loadData();
-        }
-
-        async function deleteItem(id) {
-            if(confirm('Delete?')) {
-                await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
-                loadData();
-            }
-        }
-
-        function renderForm() {
-            const fields = document.getElementById('form-fields');
-            if(currentView === 'products') {
-                fields.innerHTML = `<label>Name</label><input name="name" required><label>Price</label><input name="price" type="number"><label>Stock</label><input name="stock" type="number"><label>Image</label><input type="file" name="image">`;
-            } else {
-                fields.innerHTML = `<label>Device</label><input name="device" required><label>Customer</label><input name="customer" required><label>Status</label><select name="status"><option>Pending</option><option>Fixed</option></select>`;
-            }
-        }
-
-        function togglePanel(s) { 
-            document.getElementById('panel').classList.toggle('open', s); 
-            document.getElementById('overlay').classList.toggle('active', s); 
-            if(s) renderForm(); 
-        }
-
-        function closeAll() { togglePanel(false); }
-        window.onload = loadData;
-    </script>
+    <script src="./script.js"></script>
 </body>
 </html>

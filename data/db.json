@@ -1,10 +1,22 @@
 {
   "products": [],
-  "repairs": [],
+  "repairs": [
+    {
+      "id": "1774855884087f1jtw",
+      "device": "elite version 3",
+      "customer": "sara",
+      "status": "Pending",
+      "image": "https://via.placeholder.com/50"
+    }
+  ],
   "customers": [],
   "orders": [],
   "settings": {
-    "shopName": "Tech Ninja ",
-    "currency": "Rs "
+    "shopName": "Tech Ninja",
+    "currency": "Rs"
+  },
+  "user": {
+    "username": "admin",
+    "password": "1234"
   }
 }
