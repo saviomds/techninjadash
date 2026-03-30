@@ -38,16 +38,6 @@ window.onload = () => {
     }
 };
 
-/* ================= LOCAL DATA ================= */
-
-function getStorage(key) {
-    return JSON.parse(localStorage.getItem(key)) || [];
-}
-
-function setStorage(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-}
-
 /* ================= FETCH ================= */
 
 async function fetchData() {
@@ -56,6 +46,7 @@ async function fetchData() {
         const db = await res.json();
         
         settingsData = db.settings;
+
         document.getElementById('shop-logo').src = settingsData.logo || "https://via.placeholder.com/35";
         document.getElementById('logo-text').innerText = settingsData.shopName;
 
@@ -68,6 +59,26 @@ async function fetchData() {
     } catch (err) {
         console.error("Fetch error:", err);
     }
+}
+
+/* ================= STATUS BADGE ================= */
+
+function statusBadge(status) {
+    if (!status) return '';
+
+    const colors = {
+        Pending: '#facc15',
+        Done: '#22c55e',
+        Paid: '#3b82f6'
+    };
+
+    return `<span style="
+        background:${colors[status] || '#e5e7eb'};
+        padding:4px 8px;
+        border-radius:6px;
+        font-size:12px;
+        font-weight:600;
+    ">${status}</span>`;
 }
 
 /* ================= TABLE ================= */
@@ -94,50 +105,55 @@ function renderTable(items) {
         <tbody>`;
 
     html += items.map(i => {
-        let main = i.name || i.device || "Unknown";
-        let details = "";
+
+        let main = i.name || i.device || i.customer || "Unknown";
+
+        let details = `
+            ${i.description ? `<small style="color:#64748b;">${i.description}</small><br>` : ''}
+        `;
 
         if (currentView === 'products') {
-            details = `
-                ${i.category || ''}<br>
-                ${settingsData.currency} ${i.price || 0}<br>
-                Stock: ${i.stock || 0}<br>
-                ${i.description || ''}
+            details += `
+                Category: ${i.category || '-'}<br>
+                Price: ${settingsData.currency} ${i.price || 0}<br>
+                Stock: ${i.stock || 0}
             `;
         }
 
         else if (currentView === 'repairs') {
-            details = `
-                Cust: ${i.customer || ''}<br>
-                Phone: ${i.phone || ''}<br>
-                Issue: ${i.issue || ''}<br>
-                Status: ${i.status || ''}<br>
-                ${settingsData.currency} ${i.price || 0}
+            details += `
+                Customer: ${i.customer || '-'}<br>
+                Phone: ${i.phone || '-'}<br>
+                Issue: ${i.issue || '-'}<br>
+                Status: ${statusBadge(i.status)}<br>
+                Cost: ${settingsData.currency} ${i.price || 0}
             `;
         }
 
         else if (currentView === 'orders') {
-            details = `
-                Cust: ${i.customer || ''}<br>
+            details += `
+                Customer: ${i.customer || '-'}<br>
+                Phone: ${i.phone || '-'}<br>
                 Qty: ${i.qty || 1}<br>
-                ${settingsData.currency} ${i.price || 0}<br>
-                Payment: ${i.payment || ''}<br>
-                Status: ${i.status || ''}
+                Total: ${settingsData.currency} ${i.price || 0}<br>
+                Payment: ${statusBadge(i.payment)}<br>
+                Status: ${statusBadge(i.status)}
             `;
         }
 
         else if (currentView === 'customers') {
-            details = `
-                Phone: ${i.phone || ''}<br>
-                Email: ${i.email || ''}<br>
-                ${i.address || ''}
+            details += `
+                Phone: ${i.phone || '-'}<br>
+                Email: ${i.email || '-'}<br>
+                Address: ${i.address || '-'}
             `;
         }
 
         else if (currentView === 'staff') {
-            details = `
-                Role: ${i.role || ''}<br>
-                Phone: ${i.phone || ''}<br>
+            details += `
+                Role: ${i.role || '-'}<br>
+                Phone: ${i.phone || '-'}<br>
+                Email: ${i.email || '-'}<br>
                 Salary: ${settingsData.currency} ${i.salary || 0}
             `;
         }
@@ -147,7 +163,10 @@ function renderTable(items) {
             <td>
                 <div class="flex-cell">
                     <img src="${i.image || 'https://via.placeholder.com/50'}" class="img-thumb">
-                    <strong>${main}</strong>
+                    <div>
+                        <strong>${main}</strong><br>
+                        <small>${i.date || '-'}</small>
+                    </div>
                 </div>
             </td>
             <td>${details}</td>
@@ -159,7 +178,7 @@ function renderTable(items) {
     }).reverse().join('');
 
     area.innerHTML = html + "</tbody></table>";
-    }
+}
 
 /* ================= SETTINGS ================= */
 
@@ -223,7 +242,6 @@ function renderFormFields() {
             { label: 'Stock Quantity', key: 'stock', type: 'number' },
             { label: 'Description', key: 'description' }
         ],
-
         repairs: [
             { label: 'Device Name', key: 'device' },
             { label: 'Customer Name', key: 'customer' },
@@ -233,7 +251,6 @@ function renderFormFields() {
             { label: 'Cost', key: 'price', type: 'number' },
             { label: 'Description', key: 'description' }
         ],
-
         orders: [
             { label: 'Product Name', key: 'name' },
             { label: 'Customer Name', key: 'customer' },
@@ -244,7 +261,6 @@ function renderFormFields() {
             { label: 'Order Status', key: 'status' },
             { label: 'Description', key: 'description' }
         ],
-
         customers: [
             { label: 'Full Name', key: 'name' },
             { label: 'Phone', key: 'phone' },
@@ -252,7 +268,6 @@ function renderFormFields() {
             { label: 'Address', key: 'address' },
             { label: 'Notes', key: 'description' }
         ],
-
         staff: [
             { label: 'Full Name', key: 'name' },
             { label: 'Role', key: 'role' },
@@ -278,18 +293,27 @@ function renderFormFields() {
 
 async function handleForm(e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    ['price', 'stock', 'qty', 'salary'].forEach(field => {
+        if (formData.get(field)) {
+            formData.set(field, Number(formData.get(field)));
+        }
+    });
 
     await fetch(`/api/${currentView}`, {
         method: 'POST',
-        body: formData // Multer handles this on server
+        body: formData
     });
 
+    form.reset();
     togglePanel(false);
     fetchData();
 }
 
-/* ================= SETTINGS SAVE (FIXED IMAGE) ================= */
+/* ================= SETTINGS ================= */
 
 async function handleSettingsUpdate(e) {
     e.preventDefault();
@@ -333,6 +357,7 @@ function handleSearch() {
 
 async function handleLogin(e) {
     e.preventDefault();
+
     const user = document.getElementById('l-user').value;
     const pass = document.getElementById('l-pass').value;
 
@@ -342,6 +367,7 @@ async function handleLogin(e) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })
         });
+
         const data = await res.json();
 
         if (data.success) {
@@ -350,11 +376,10 @@ async function handleLogin(e) {
         } else {
             alert("Invalid credentials");
         }
-    } catch (err) {
+    } catch {
         alert("Server error during login");
     }
-    }
-
+}
 
 function logout() {
     localStorage.removeItem('ninja_auth');
