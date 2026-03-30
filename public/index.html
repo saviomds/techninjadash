@@ -23,7 +23,7 @@
     <div id="dashboard" style="display:none;">
         <div id="overlay" onclick="togglePanel(false)"></div>
         <aside class="sidebar">
-            <div class="logo"><img src="./image/logo.jpg"><span id="logo-text">TechNinja</span></div>
+            <div class="logo"><img id="shop-logo" src=""><span id="logo-text">TechNinja</span></div>
             <div class="nav-item active" onclick="switchView('products', this)">📦 Products</div>
             <div class="nav-item" onclick="switchView('repairs', this)">🔧 Repairs</div>
             <div class="nav-item" onclick="switchView('settings', this)" style="margin-top:auto">⚙️ Settings</div>
@@ -43,16 +43,14 @@
                 </div>
             </div>
         </main>
-        
         <div id="panel">
             <h2 id="p-title">Add New</h2>
             <form id="main-form" onsubmit="handleForm(event)">
                 <div id="f-fields"></div>
-                <button type="submit" id="save-btn" class="btn-add" style="width:100%; margin-top:10px;">Save Data</button>
+                <button type="submit" id="save-btn" class="btn-add" style="width:100%; margin-top:10px;">Save</button>
             </form>
         </div>
     </div>
-
     <script src="./script.js"></script>
 </body>
 </html>

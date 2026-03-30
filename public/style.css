@@ -1,30 +1,43 @@
- :root { --primary: #0f172a; --bg: #f8fafc; --border: #e2e8f0; --text: #64748b; --accent: #3b82f6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--primary); }
+:root { --primary: #0f172a; --bg: #f8fafc; --border: #e2e8f0; --text: #64748b; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background: var(--bg); color: var(--primary); }
 
-        /* Login Screen */
-        #login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; }
+#login-screen { position: fixed; inset: 0; background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.login-box { background: white; padding: 40px; border-radius: 12px; width: 350px; }
 
-        /* Dashboard */
-        #dashboard { display: none; min-height: 100vh; }
-        .sidebar { width: 260px; background: white; border-right: 1px solid var(--border); padding: 25px; position: fixed; height: 100vh; display: flex; flex-direction: column; }
-        .logo { font-size: 20px; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
-        .logo img { width: 35px; height: 35px; border-radius: 8px; }
-        .nav-item { padding: 12px; cursor: pointer; border-radius: 8px; color: var(--text); margin-bottom: 5px; }
-        .nav-item.active { background: #f1f5f9; color: var(--primary); font-weight: 600; }
-        .main { margin-left: 260px; flex: 1; padding: 40px; width: calc(100% - 260px); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--border); }
-        .img-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; vertical-align: middle; margin-right: 10px; }
+#dashboard { display: none; min-height: 100vh; }
+.sidebar { width: 260px; background: white; border-right: 1px solid var(--border); padding: 25px; position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 1000; }
+.logo { font-size: 20px; font-weight: 700; margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+.logo img { width: 35px; height: 35px; border-radius: 8px; object-fit: cover; }
+.nav-item { padding: 12px; cursor: pointer; border-radius: 8px; color: var(--text); margin-bottom: 5px; }
+.nav-item.active { background: #f1f5f9; color: var(--primary); font-weight: 600; }
 
-        /* Slidout Panel */
-        #panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100vh; background: white; transition: 0.4s; padding: 30px; z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
-        #panel.open { right: 0; }
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1500; }
-        #overlay.active { display: block; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 8px; }
-        label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+.main { margin-left: 260px; flex: 1; padding: 40px; width: calc(100% - 260px); }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.btn-add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th, td { padding: 12px; border-bottom: 1px solid var(--border); }
+.img-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; vertical-align: middle; margin-right: 10px; border: 1px solid var(--border); }
+
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.badge.pending { background: #fee2e2; color: #b91c1c; }
+.badge.repairing { background: #fef9c3; color: #a16207; }
+.badge.fixed { background: #dcfce7; color: #15803d; }
+
+#panel { position: fixed; right: -450px; top: 0; width: 400px; height: 100vh; background: white; transition: 0.4s; padding: 30px; z-index: 2000; box-shadow: -10px 0 30px rgba(0,0,0,0.1); }
+#panel.open { right: 0; }
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1500; }
+#overlay.active { display: block; }
+
+input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; }
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+
+@media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; justify-content: space-between; padding: 10px 20px; }
+    .sidebar .logo img { width: 25px; height: 25px; }
+    .nav-item { font-size: 12px; margin: 0; padding: 5px; }
+    .main { margin-left: 0; width: 100%; padding: 20px; }
+    #panel { width: 100%; right: -100%; }
+}

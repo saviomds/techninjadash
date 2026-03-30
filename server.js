@@ -10,10 +10,11 @@ app.use('/uploads', express.static('uploads'));
 
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
+// Ensure Folders Exist
 if (!fs.existsSync(path.join(__dirname, 'data'))) fs.mkdirSync(path.join(__dirname, 'data'));
 if (!fs.existsSync(DB_PATH)) {
     fs.writeFileSync(DB_PATH, JSON.stringify({
-        products: [], repairs: [], settings: { shopName: "TechNinja Pro", currency: "Rs" },
+        products: [], repairs: [], settings: { shopName: "Tech Ninja", currency: "Rs", logo: "./image/logo.jpg" },
         user: { username: "admin", password: "123" }
     }, null, 2));
 }
@@ -23,7 +24,7 @@ const writeDB = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const p = path.join(__dirname, 'uploads', req.params.type || 'general');
+        const p = `./uploads/${req.params.type || 'general'}`;
         if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
         cb(null, p);
     },
@@ -31,6 +32,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// AUTH
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const db = readDB();
@@ -41,28 +43,29 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// GET ALL DATA
 app.get('/api/data', (req, res) => res.json(readDB()));
 
-app.post('/api/settings', (req, res) => {
+// SETTINGS UPDATE (Handles Logo Upload)
+app.post('/api/settings', upload.single('logo'), (req, res) => {
     const db = readDB();
-    db.settings = { ...db.settings, ...req.body };
-    if (req.body.newPassword && req.body.newPassword.trim() !== "") {
-        db.user.password = req.body.newPassword;
-    }
+    db.settings.shopName = req.body.shopName || db.settings.shopName;
+    db.settings.currency = req.body.currency || db.settings.currency;
+    if (req.file) db.settings.logo = `/uploads/general/${req.file.filename}`;
+    if (req.body.newPassword) db.user.password = req.body.newPassword;
     writeDB(db);
     res.json({ success: true });
 });
 
+// ADD ITEM (Products or Repairs)
 app.post('/api/:type', upload.single('image'), (req, res) => {
     const { type } = req.params;
     const db = readDB();
-    
-    // Idempotency check: prevent duplicate names in the same session
-    const isDup = db[type].find(i => i.name === req.body.name && type === 'products');
-    if(isDup) return res.status(409).json({error: "Duplicate"});
+    const isDup = db[type].some(i => (i.name || i.device) === (req.body.name || req.body.device));
+    if (isDup) return res.status(400).json({ error: "Duplicate Entry" });
 
     const newItem = { 
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 5), 
+        id: Date.now().toString(), 
         ...req.body, 
         image: req.file ? `/uploads/${type}/${req.file.filename}` : 'https://via.placeholder.com/50' 
     };
@@ -71,23 +74,21 @@ app.post('/api/:type', upload.single('image'), (req, res) => {
     res.json(newItem);
 });
 
+// DELETE ITEM + IMAGE
 app.delete('/api/:type/:id', (req, res) => {
     const { type, id } = req.params;
     const db = readDB();
-    const idx = db[type].findIndex(i => String(i.id) === String(id));
-    
+    const idx = db[type].findIndex(i => i.id === id);
     if (idx !== -1) {
         const item = db[type][idx];
         if (item.image && item.image.startsWith('/uploads')) {
-            const filePath = path.join(__dirname, item.image);
+            const filePath = path.join(__dirname, item.image.replace(/^\//, ''));
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
         }
         db[type].splice(idx, 1);
         writeDB(db);
         res.sendStatus(200);
-    } else {
-        res.status(404).send("Not found");
-    }
+    } else res.status(404).send("Not found");
 });
 
-app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
+app.listen(3000, () => console.log("🚀 Server: http://localhost:3000"));
