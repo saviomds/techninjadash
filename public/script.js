@@ -4,13 +4,10 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.getElementById('overlay');
 
-    // Mobile behavior (slide)
     if (window.innerWidth <= 768) {
         sidebar.classList.toggle('open');
         overlay.classList.toggle('active');
-    } 
-    // Desktop behavior (collapse)
-    else {
+    } else {
         sidebar.classList.toggle('collapsed');
     }
 }
@@ -24,7 +21,12 @@ function closeSidebar() {
 
 let currentView = 'products';
 let allItems = [];
-let settingsData = { shopName: 'TechNinja', currency: 'Rs', logo: './image/logo.jpg' };
+
+let settingsData = JSON.parse(localStorage.getItem('settings')) || {
+    shopName: 'TechNinja',
+    currency: 'Rs',
+    logo: 'https://via.placeholder.com/35'
+};
 
 /* ================= INIT ================= */
 
@@ -36,30 +38,32 @@ window.onload = () => {
     }
 };
 
+/* ================= LOCAL DATA ================= */
+
+function getStorage(key) {
+    return JSON.parse(localStorage.getItem(key)) || [];
+}
+
+function setStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
 /* ================= FETCH ================= */
 
-async function fetchData() {
-    try {
-        const res = await fetch('/api/data');
-        const data = await res.json();
+function fetchData() {
+    settingsData = JSON.parse(localStorage.getItem('settings')) || settingsData;
 
-        // Settings sync
-        settingsData = data.settings;
-        document.getElementById('shop-logo').src = settingsData.logo;
-        document.getElementById('logo-text').innerText = settingsData.shopName;
+    document.getElementById('shop-logo').src = settingsData.logo || "https://via.placeholder.com/35";
+    document.getElementById('logo-text').innerText = settingsData.shopName;
 
-        const area = document.getElementById('content-area');
-        area.innerHTML = "";
+    const area = document.getElementById('content-area');
+    area.innerHTML = "";
 
-        if (currentView === 'settings') {
-            renderSettingsPage();
-        } else {
-            allItems = data[currentView] || [];
-            renderTable(allItems);
-        }
-
-    } catch (err) {
-        console.error("Fetch Error:", err);
+    if (currentView === 'settings') {
+        renderSettingsPage();
+    } else {
+        allItems = getStorage(currentView);
+        renderTable(allItems);
     }
 }
 
@@ -107,7 +111,7 @@ function renderTable(items) {
         <tr>
             <td>
                 <div class="flex-cell">
-                    <img src="${i.image}" class="img-thumb" onerror="this.src='https://via.placeholder.com/50'">
+                    <img src="${i.image || 'https://via.placeholder.com/50'}" class="img-thumb">
                     <strong>${name}</strong>
                 </div>
             </td>
@@ -132,6 +136,7 @@ function renderSettingsPage() {
         <div class="settings-card">
             <h3>Shop Configuration</h3>
             <form onsubmit="handleSettingsUpdate(event)">
+
                 <label>Shop Name</label>
                 <input type="text" name="shopName" value="${settingsData.shopName}" required>
 
@@ -141,8 +146,8 @@ function renderSettingsPage() {
                 <label>New Password</label>
                 <input type="password" name="password" placeholder="Leave blank to keep">
 
-                <label>Logo</label>
-                <input type="file" name="logo">
+                <label>Logo Image</label>
+                <input type="file" name="logo" accept="image/*">
 
                 <button class="btn-add">Save Settings</button>
             </form>
@@ -159,9 +164,7 @@ function switchView(v, el) {
 
     document.getElementById('add-btn').style.display = (v === 'settings') ? 'none' : 'block';
 
-    // Close sidebar on mobile after click
     closeSidebar();
-
     fetchData();
 }
 
@@ -203,41 +206,77 @@ function renderFormFields() {
     f.innerHTML = fields.map(x => `
         <label>${x.label}</label>
         <input name="${x.key}" required>
-    `).join('') + `
-        <label>Image</label>
-        <input type="file" name="image">
-    `;
+    `).join('');
 }
 
-/* ================= API ================= */
+/* ================= FORM ================= */
 
-async function handleForm(e) {
+function handleForm(e) {
     e.preventDefault();
 
-    await fetch(`/api/${currentView}`, {
-        method: 'POST',
-        body: new FormData(e.target)
+    const form = new FormData(e.target);
+    let items = getStorage(currentView);
+
+    const newItem = {
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString()
+    };
+
+    form.forEach((val, key) => {
+        newItem[key] = val;
     });
+
+    items.push(newItem);
+    setStorage(currentView, items);
 
     togglePanel(false);
     fetchData();
 }
 
-async function handleSettingsUpdate(e) {
+/* ================= SETTINGS SAVE (FIXED IMAGE) ================= */
+
+function handleSettingsUpdate(e) {
     e.preventDefault();
 
-    await fetch('/api/settings', {
-        method: 'POST',
-        body: new FormData(e.target)
-    });
+    const form = new FormData(e.target);
+
+    for (let [key, val] of form.entries()) {
+
+        // IMAGE UPLOAD FIX
+        if (key === "logo" && val && val.size > 0) {
+            const reader = new FileReader();
+
+            reader.onload = function () {
+                settingsData.logo = reader.result;
+                saveSettings();
+            };
+
+            reader.readAsDataURL(val);
+            return;
+        }
+
+        if (val && key !== "logo") {
+            settingsData[key] = val;
+        }
+    }
+
+    saveSettings();
+}
+
+function saveSettings() {
+    localStorage.setItem('settings', JSON.stringify(settingsData));
 
     alert("Saved!");
     location.reload();
 }
 
-async function deleteItem(id) {
+/* ================= DELETE ================= */
+
+function deleteItem(id) {
     if (confirm("Delete?")) {
-        await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
+        let items = getStorage(currentView);
+        items = items.filter(i => i.id !== id);
+        setStorage(currentView, items);
         fetchData();
     }
 }
@@ -258,21 +297,10 @@ function handleSearch() {
 
 /* ================= AUTH ================= */
 
-async function handleLogin(e) {
+function handleLogin(e) {
     e.preventDefault();
 
-    const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            username: l-user.value,
-            password: l-pass.value
-        })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
+    if (l-user.value === "admin" && l-pass.value === "1234") {
         localStorage.setItem('ninja_auth', 'true');
         location.reload();
     } else {
