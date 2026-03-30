@@ -50,20 +50,23 @@ function setStorage(key, data) {
 
 /* ================= FETCH ================= */
 
-function fetchData() {
-    settingsData = JSON.parse(localStorage.getItem('settings')) || settingsData;
+async function fetchData() {
+    try {
+        const res = await fetch('/api/data');
+        const db = await res.json();
+        
+        settingsData = db.settings;
+        document.getElementById('shop-logo').src = settingsData.logo || "https://via.placeholder.com/35";
+        document.getElementById('logo-text').innerText = settingsData.shopName;
 
-    document.getElementById('shop-logo').src = settingsData.logo || "https://via.placeholder.com/35";
-    document.getElementById('logo-text').innerText = settingsData.shopName;
-
-    const area = document.getElementById('content-area');
-    area.innerHTML = "";
-
-    if (currentView === 'settings') {
-        renderSettingsPage();
-    } else {
-        allItems = getStorage(currentView);
-        renderTable(allItems);
+        if (currentView === 'settings') {
+            renderSettingsPage();
+        } else {
+            allItems = db[currentView] || [];
+            renderTable(allItems);
+        }
+    } catch (err) {
+        console.error("Fetch error:", err);
     }
 }
 
@@ -211,23 +214,14 @@ function renderFormFields() {
 
 /* ================= FORM ================= */
 
-function handleForm(e) {
+async function handleForm(e) {
     e.preventDefault();
+    const formData = new FormData(e.target);
 
-    const form = new FormData(e.target);
-    let items = getStorage(currentView);
-
-    const newItem = {
-        id: Date.now().toString(),
-        date: new Date().toLocaleDateString()
-    };
-
-    form.forEach((val, key) => {
-        newItem[key] = val;
+    await fetch(`/api/${currentView}`, {
+        method: 'POST',
+        body: formData // Multer handles this on server
     });
-
-    items.push(newItem);
-    setStorage(currentView, items);
 
     togglePanel(false);
     fetchData();
@@ -235,48 +229,26 @@ function handleForm(e) {
 
 /* ================= SETTINGS SAVE (FIXED IMAGE) ================= */
 
-function handleSettingsUpdate(e) {
+async function handleSettingsUpdate(e) {
     e.preventDefault();
+    const formData = new FormData(e.target);
 
-    const form = new FormData(e.target);
+    const res = await fetch('/api/settings', {
+        method: 'POST',
+        body: formData
+    });
 
-    for (let [key, val] of form.entries()) {
-
-        // IMAGE UPLOAD FIX
-        if (key === "logo" && val && val.size > 0) {
-            const reader = new FileReader();
-
-            reader.onload = function () {
-                settingsData.logo = reader.result;
-                saveSettings();
-            };
-
-            reader.readAsDataURL(val);
-            return;
-        }
-
-        if (val && key !== "logo") {
-            settingsData[key] = val;
-        }
+    if (res.ok) {
+        alert("Settings Saved!");
+        location.reload();
     }
-
-    saveSettings();
-}
-
-function saveSettings() {
-    localStorage.setItem('settings', JSON.stringify(settingsData));
-
-    alert("Saved!");
-    location.reload();
 }
 
 /* ================= DELETE ================= */
 
-function deleteItem(id) {
+async function deleteItem(id) {
     if (confirm("Delete?")) {
-        let items = getStorage(currentView);
-        items = items.filter(i => i.id !== id);
-        setStorage(currentView, items);
+        await fetch(`/api/${currentView}/${id}`, { method: 'DELETE' });
         fetchData();
     }
 }
@@ -297,19 +269,30 @@ function handleSearch() {
 
 /* ================= AUTH ================= */
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
-
     const user = document.getElementById('l-user').value;
     const pass = document.getElementById('l-pass').value;
 
-    if (user === "admin" && pass === "1234") {
-        localStorage.setItem('ninja_auth', 'true');
-        location.reload();
-    } else {
-        alert("Invalid credentials");
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            localStorage.setItem('ninja_auth', 'true');
+            location.reload();
+        } else {
+            alert("Invalid credentials");
+        }
+    } catch (err) {
+        alert("Server error during login");
     }
-}
+    }
+
 
 function logout() {
     localStorage.removeItem('ninja_auth');
