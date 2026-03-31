@@ -1,9 +1,34 @@
 {
   "products": [],
-  "repairs": [],
+  "repairs": [
+    {
+      "id": "1774981836499",
+      "date": "2026-03-31",
+      "device": "Iphone 17",
+      "customer": "Sara",
+      "phone": "4243242",
+      "issue": "water went inside",
+      "status": "Pending",
+      "price": 32000,
+      "description": "split",
+      "image": "/uploads/1774981836500-iphone.webp"
+    }
+  ],
   "orders": [],
   "customers": [],
-  "staff": [],
+  "staff": [
+    {
+      "id": "1774981573641",
+      "date": "2026-03-31",
+      "name": "Dominique Savio",
+      "phone": "0786731976",
+      "email": "dominiquesavio2003@gmail.com",
+      "role": "IT",
+      "salary": 20000,
+      "description": "MIT",
+      "image": "/uploads/1774981573642-user.jpg"
+    }
+  ],
   "settings": {
     "shopName": "TechNinja ",
     "currency": "Rs",
