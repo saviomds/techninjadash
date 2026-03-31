@@ -10,6 +10,7 @@ const nextConfig = {
       },
     ],
   },
+  output: 'standalone',
   experimental: {
     turbopack: {
       root: '.',
