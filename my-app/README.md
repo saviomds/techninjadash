@@ -1,8 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Affiliate Marketing & Product Ordering System
 
-## Getting Started
+This is a full-stack web application built with **Next.js**, **React.js**, **Node.js**, and **PostgreSQL**, designed to manage an affiliate marketing system with integrated product ordering, admin dashboards, and AI-based fraud detection.
 
-First, run the development server:
+---
+
+## 🚀 Project Overview
+
+This project combines multiple systems into one platform:
+
+* Affiliate marketing tracking system
+* Product ordering system (combos)
+* Admin dashboard for managing products and content
+* User dashboard after order completion
+* AI-based fraud detection for transaction safety
+
+---
+
+## 🧠 Key Features
+
+### 🛒 Product Ordering System
+
+* Users can browse and order **combos**
+* Data is dynamically loaded from `combos.json`
+* Fully dynamic CRUD system for products
+
+### 🧑‍💼 Admin Dashboard
+
+* Add, update, and delete products (combos)
+* Manage catalog through Express API routes
+* Data stored in JSON or database depending on configuration
+* No templating engines used (no EJS)
+
+### 📊 User Dashboard
+
+* Users are redirected after completing an order
+* Clean and modern UI dashboard experience
+* Displays order summary and status
+
+### 🔐 Backend System
+
+* Built with **Node.js + Express**
+* API routes for managing products and orders
+* Handles dynamic requests:
+
+  * `POST /admin/products`
+  * `PUT /admin/products/:idx`
+  * `DELETE /admin/products/:idx`
+
+### 🤖 AI Fraud Detection
+
+* Detects suspicious or abnormal order behavior
+* Helps reduce fake or abusive transactions
+
+---
+
+## 🧱 Tech Stack
+
+### Frontend
+
+* Next.js (App Router)
+* React.js
+* HTML, CSS, JavaScript (Vanilla where needed)
+
+### Backend
+
+* Node.js
+* Express.js
+* File-based storage (`.json`) + PostgreSQL integration
+
+### Database
+
+* PostgreSQL (primary database)
+* JSON files used for lightweight product storage during development
+
+---
+
+## 📁 Project Structure
+
+```
+/app
+  ├── page.js
+  ├── dashboard/
+  ├── admin/
+
+/server
+  ├── routes/
+  ├── controllers/
+
+/db
+  ├── db.json
+  ├── combos.json
+
+/public
+  ├── assets
+```
+
+---
+
+## ⚙️ Getting Started
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Run development server
 
 ```bash
 npm run dev
@@ -10,27 +113,78 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Start backend server (if separate)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+node server/index.js
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Open in browser
 
-## Learn More
+```
+http://localhost:3000
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧩 API Endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Admin Products
 
-## Deploy on Vercel
+* `POST /admin/products`
+* `PUT /admin/products/:idx`
+* `DELETE /admin/products/:idx`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Data Sources
+
+* `combos.json` → stores product combos
+* `db.json` → main system configuration
+
+---
+
+## 🎯 Goals
+
+* Build a scalable affiliate + ordering system
+* Provide smooth admin control over products
+* Ensure secure and fraud-resistant ordering flow
+* Deliver clean user experience with dashboard redirection
+
+---
+
+## 🌐 Deployment
+
+Recommended deployment:
+
+* Frontend: Vercel
+* Backend: Render / Railway / VPS
+* Database: Supabase / PostgreSQL hosted instance
+
+---
+
+## 📌 Notes
+
+* No EJS or server-side templating is used
+* Fully API-driven architecture
+* Focus on modular and scalable system design
+
+---
+
+## 👨‍💻 Author
+
+**Name:** Dominique Savio
+**Role:** Full-stack Developer (Next.js, Node.js, React.js, PostgreSQL)
+**Focus:** Building scalable web applications, affiliate systems, dashboards, and automation tools
+
+**Links:**
+
+* GitHub: (add your GitHub here)
+* Portfolio: (add your portfolio here)
+* Email: (add your email here)
+
+---
+
+Built with a focus on scalability, automation, and real-world business use cases (affiliate + ordering + admin control).
