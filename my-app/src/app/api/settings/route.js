@@ -11,35 +11,59 @@ export async function POST(req) {
     const currency = formData.get("currency");
     const logoFile = formData.get("logo");
 
-    const db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
+    // ✅ SAFE DB READ (PREVENT CRASH)
+    let db;
+    try {
+      db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
+    } catch (err) {
+      return Response.json(
+        { error: "Database file is corrupted JSON" },
+        { status: 500 }
+      );
+    }
 
-    let logoPath = db.settings.logo;
+    let logoPath = db.settings?.logo || "/uploads/default.png";
 
-    // HANDLE IMAGE UPLOAD
+    // 🖼️ HANDLE IMAGE UPLOAD
     if (logoFile && typeof logoFile !== "string") {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
       const fileName = `${Date.now()}-${logoFile.name}`;
-      const uploadPath = path.join(process.cwd(), "public/uploads", fileName);
+      const uploadDir = path.join(process.cwd(), "public/uploads");
+      const uploadPath = path.join(uploadDir, fileName);
+
+      // ✅ ensure folder exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
 
       fs.writeFileSync(uploadPath, buffer);
 
       logoPath = `/uploads/${fileName}`;
     }
 
+    // 🔄 UPDATE SETTINGS
     db.settings = {
       ...db.settings,
       shopName,
       currency,
-      logo: logoPath
+      logo: logoPath,
     };
 
+    // 💾 SAVE DB
     fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
-    return Response.json({ success: true, settings: db.settings });
+    return Response.json({
+      success: true,
+      settings: db.settings,
+    });
+
   } catch (err) {
     console.error(err);
-    return Response.json({ error: "Failed to update settings" }, { status: 500 });
+    return Response.json(
+      { error: "Failed to update settings" },
+      { status: 500 }
+    );
   }
 }
