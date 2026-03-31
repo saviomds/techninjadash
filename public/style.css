@@ -38,6 +38,19 @@ body {
     width: 100%;
     max-width: 350px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    animation: fadeUp 0.4s ease;
+}
+
+/* ================= LOGIN ANIMATION ================= */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ================= LAYOUT ================= */
@@ -245,7 +258,6 @@ td:nth-child(2) {
     line-height: 1.4;
 }
 
-/* Hover effect */
 tr:hover td {
     background: #f9fafb;
 }
@@ -290,7 +302,6 @@ tr:hover td {
     padding: 25px;
     z-index: 2000;
     box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-
     display: flex;
     flex-direction: column;
 }
@@ -353,13 +364,29 @@ tr:hover td {
     }
 
     .header {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .menu-btn {
+        order: 1;
+    }
+
+    .header h1 {
+        order: 2;
+        flex: 1;
+        text-align: center;
     }
 
     .header-actions {
+        order: 3;
         width: 100%;
+        display: flex;
         flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
     }
 
     #search-bar {
@@ -380,7 +407,7 @@ tr:hover td {
     }
 }
 
-/* ================= SMALL ================= */
+/* ================= SMALL (LOGIN IMPROVED) ================= */
 @media (max-width: 480px) {
 
     table {
@@ -390,6 +417,39 @@ tr:hover td {
     td:nth-child(3),
     th:nth-child(3) {
         display: none;
+    }
+
+    /* LOGIN FIX */
+    #login-screen {
+        padding: 20px;
+        padding-top: 60px;
+        align-items: flex-start;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 100%;
+        padding: 25px;
+        border-radius: 16px;
+        box-shadow: none;
+    }
+
+    .login-box h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .login-box input {
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    .login-box button {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        border-radius: 12px;
     }
 }
 
