@@ -5,7 +5,7 @@ import path from "path";
 export async function POST(req, { params }) {
   try {
     const { type } = await params;
-    const db = readDB();
+    const db = await readDB();
     const form = await req.formData();
 
     const item = {
@@ -52,7 +52,7 @@ export async function POST(req, { params }) {
       db[type].push(item);
     }
 
-    writeDB(db);
+    await writeDB(db);
     return Response.json({ success: true });
   } catch (err) {
     console.error("POST ERROR:", err);

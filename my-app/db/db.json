@@ -26,7 +26,8 @@
       "role": "IT",
       "salary": 20000,
       "description": "MIT",
-      "image": "/uploads/1774981573642-user.jpg"
+      "image": "/uploads/1774981573642-user.jpg",
+     
     }
   ],
   "settings": {

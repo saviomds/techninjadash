@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function SettingsForm({ settings, setRefreshTrigger }) {
   const [formState, setFormState] = useState(settings || {});
@@ -20,7 +21,7 @@ export default function SettingsForm({ settings, setRefreshTrigger }) {
 
     const res = await fetch("/api/settings", {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     if (res.ok) {
@@ -32,68 +33,104 @@ export default function SettingsForm({ settings, setRefreshTrigger }) {
   }
 
   return (
-    <div className="bg-white p-4 md:p-8 rounded-xl shadow-md max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold mb-4 text-black">
-        Shop Configuration
-      </h2>
-
-      <form onSubmit={handleSettingsUpdate} className="space-y-4">
-        {/* SHOP NAME */}
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Name</label>
-          <input
-            className="w-full border p-3 mt-1 rounded-lg text-black focus:ring-2 focus:ring-black outline-none transition-all"
-            value={formState.shopName || ""}
-            onChange={(e) =>
-              setFormState({ ...formState, shopName: e.target.value })
-            }
-            placeholder="Enter Shop Name"
-          />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+        
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">
+            ⚙️ Shop Settings
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage your store configuration and branding
+          </p>
         </div>
 
-        {/* CURRENCY */}
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Currency Symbol</label>
-          <input
-            className="w-full border p-3 mt-1 rounded-lg text-black focus:ring-2 focus:ring-black outline-none transition-all"
-            value={formState.currency || ""}
-            onChange={(e) =>
-              setFormState({ ...formState, currency: e.target.value })
-            }
-            placeholder="e.g. Rs, $, €"
-          />
-        </div>
+        <form onSubmit={handleSettingsUpdate} className="space-y-6">
 
-        {/* LOGO */}
-        <div className="py-2">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Logo</label>
-          <input
-            type="file"
-            className="block w-full text-sm text-slate-500 mt-1
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-black file:text-white
-              hover:file:bg-gray-800 cursor-pointer"
-            accept="image/*"
-            onChange={(e) => setLogoFile(e.target.files[0])}
-          />
-        </div>
+          {/* Shop Name */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Shop Name
+            </label>
+            <input
+              className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200 
+              focus:ring-2 focus:ring-black focus:border-black outline-none
+              transition"
+              value={formState.shopName || ""}
+              onChange={(e) =>
+                setFormState({ ...formState, shopName: e.target.value })
+              }
+              placeholder="Enter your shop name"
+            />
+          </div>
 
-        {formState.logo && typeof formState.logo === 'string' && formState.logo.startsWith('/') && (
-          <Image
-            src={formState.logo}
-            width={80}
-            height={80}
-            alt="logo"
-            className="mt-3"
-          />
-        )}
+          {/* Currency */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Currency
+            </label>
+            <input
+              className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200 
+              focus:ring-2 focus:ring-black focus:border-black outline-none
+              transition"
+              value={formState.currency || ""}
+              onChange={(e) =>
+                setFormState({ ...formState, currency: e.target.value })
+              }
+              placeholder="e.g. Rs, $, €"
+            />
+          </div>
 
-        <button className="bg-black text-white px-4 py-2 mt-4 rounded">
-          Save
-        </button>
-      </form>
+          {/* Logo Upload */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase">
+              Logo
+            </label>
+
+            <div className="mt-2 flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setLogoFile(e.target.files[0])}
+                className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-xl file:border-0
+                file:bg-black file:text-white
+                hover:file:bg-gray-800 cursor-pointer"
+              />
+            </div>
+
+            {/* Preview */}
+            {formState.logo && typeof formState.logo === "string" && (
+              <div className="mt-4 flex items-center gap-4">
+                <Image
+                  src={formState.logo}
+                  width={70}
+                  height={70}
+                  alt="logo"
+                  className="rounded-xl border"
+                />
+                <span className="text-sm text-gray-500">
+                  Current logo
+                </span>
+              </div>
+            )}
+          </div>
+        
+          {/* Save Button */}
+          <button
+            className="w-full bg-black text-white py-3 rounded-xl font-semibold
+            hover:bg-gray-900 transition active:scale-[0.99]"
+          >
+            Save Settings
+          </button>
+
+          <Link href="#" className="text-sm text-blue-600">
+            Forgot Password?
+          </Link>
+        </form>
+      </div>
     </div>
   );
 }
