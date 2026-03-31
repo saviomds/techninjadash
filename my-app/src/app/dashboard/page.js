@@ -90,15 +90,19 @@ export default function Dashboard() {
       formData.append('image', imageFile); // 'image' is the fieldname expected by the API
     }
 
-    await fetch(`/api/${view}`, {
+    const res = await fetch(`/api/${view}`, {
       method: "POST",
       body: formData,
     });
 
-    setOpen(false);
-    setForm({});
-    setImageFile(null); // Clear image file after submission
-    setRefreshTrigger(prev => prev + 1);
+    if (res.ok) {
+      setOpen(false);
+      setForm({});
+      setImageFile(null); // Clear image file after submission
+      setRefreshTrigger(prev => prev + 1);
+    } else {
+      alert("Failed to save item. Please try again.");
+    }
   }
 
   // Define schemas for dynamic form fields
