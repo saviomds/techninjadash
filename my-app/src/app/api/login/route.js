@@ -6,7 +6,7 @@ export async function POST(req) {
     const { username, password } = body;
 
     // Default TechNinja Credentials
-    if (username === "admin" && password === "admin") {
+    if (username === "admin" && password === "321") {
       return Response.json({ success: true });
     }
 
