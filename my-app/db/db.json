@@ -1,0 +1,13 @@
+{
+  "products": [],
+  "repairs": [],
+  "orders": [],
+  "customers": [],
+  "staff": [],
+  "settings": {
+    "shopName": "TechNinja ",
+    "currency": "Rs",
+    "logo": "/uploads/1774948920306-techninja.jpg"
+  },
+  "home": []
+}
