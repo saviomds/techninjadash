@@ -22,7 +22,11 @@ export async function POST(req) {
 
       // ✅ Delete old Cloudinary logo if it exists
       if (logoPublicId) {
-        await cloudinary.uploader.destroy(logoPublicId);
+        try {
+          await cloudinary.uploader.destroy(logoPublicId);
+        } catch (cloudErr) {
+          console.error("Cloudinary Cleanup Failed:", cloudErr.message);
+        }
       }
       
       // ✅ Also clean up old local logo if it exists

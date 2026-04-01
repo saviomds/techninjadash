@@ -126,7 +126,7 @@ export default function SettingsForm({ settings, setRefreshTrigger }) {
             Save Settings
           </button>
 
-          <Link href="#" className="text-sm text-blue-600">
+          <Link href="/forgetPwd" className="text-sm text-blue-600">
             Forgot Password?
           </Link>
         </form>
