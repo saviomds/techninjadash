@@ -5,9 +5,10 @@
   "customers": [],
   "staff": [],
   "settings": {
-    "shopName": "TechNinja Pro",
+    "shopName": "TechNinja ",
     "currency": "Rs",
-    "logo": "/uploads/logos/1775029358696-techninja.jpg"
+    "logo": "https://res.cloudinary.com/du7wgettf/image/upload/v1775035881/logos/x1u8ss4hrfuocaxwn8o8.jpg",
+    "logo_public_id": "logos/x1u8ss4hrfuocaxwn8o8"
   },
   "home": []
 }

@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir, unlink, access, constants } from "fs/promises";
-import path from "path";
 import { readDB, writeDB } from "@/lib/db";
+import cloudinary from "@/lib/cloudinary";
+import { unlink, access, constants } from "fs/promises";
+import path from "path";
 
 export async function POST(req) {
   try {
@@ -11,39 +12,39 @@ export async function POST(req) {
     const logoFile = formData.get("logo");
 
     const db = await readDB();
-    let logoPath = db.settings?.logo || "/uploads/logos/default.png";
+    let logoPath = db.settings?.logo || "https://res.cloudinary.com/du7wgettf/image/upload/v1/default.png";
+    let logoPublicId = db.settings?.logo_public_id || "";
 
     // 🖼️ HANDLE IMAGE UPLOAD
     if (logoFile && typeof logoFile !== "string") {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      const fileName = `${Date.now()}-${logoFile.name}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
-      const uploadPath = path.join(uploadDir, fileName);
-
-      // ✅ ensure folder exists
-      await mkdir(uploadDir, { recursive: true });
-
-      // ✅ DELETE OLD LOGO FILE BEFORE SAVING NEW ONE
-      if (db.settings?.logo?.startsWith("/uploads/logos/")) {
-        const oldLogoPath = path.join(process.cwd(), "public", db.settings.logo);
-        try {
-          await access(oldLogoPath, constants.F_OK); // Check if file exists
-          await unlink(oldLogoPath);
-          console.log("Old logo deleted:", oldLogoPath);
-        } catch (unlinkErr) {
-          if (unlinkErr.code === 'ENOENT') {
-            console.log("Old logo file not found, skipping deletion.");
-          } else {
-            console.error("Failed to delete old logo:", unlinkErr);
-          }
-        }
+      // ✅ Delete old Cloudinary logo if it exists
+      if (logoPublicId) {
+        await cloudinary.uploader.destroy(logoPublicId);
+      }
+      
+      // ✅ Also clean up old local logo if it exists
+      if (logoPath.startsWith("/uploads/")) {
+        const oldPath = path.join(process.cwd(), "public", logoPath);
+        try { await unlink(oldPath); } catch (e) {}
       }
 
-      await writeFile(uploadPath, buffer);
+      // ✅ Upload new logo to Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "logos" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(buffer);
+      });
 
-      logoPath = `/uploads/logos/${fileName}`;
+      logoPath = result.secure_url;
+      logoPublicId = result.public_id;
     }
 
     // 🔄 UPDATE SETTINGS (KEEPING EXISTING FIELDS)
@@ -52,6 +53,7 @@ export async function POST(req) {
       shopName: shopName || db.settings?.shopName,
       currency: currency || db.settings?.currency,
       logo: logoPath,
+      logo_public_id: logoPublicId,
     };
 
     // 💾 SAVE DB

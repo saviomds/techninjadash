@@ -7,12 +7,23 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
   const [formData, setFormData] = useState({});
 
   if (!Array.isArray(data) || data.length === 0) {
-    return <p className="text-gray-500 text-center py-10">No items found in {view}.</p>;
+    return (
+      <p className="text-gray-500 text-center py-10">
+        No items found in {view}.
+      </p>
+    );
   }
 
+  // ✅ FORMAT LABELS
   const formatKey = (key) =>
     key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
+  // ✅ UNIVERSAL IMAGE HANDLER (CLOUDINARY + LOCAL + FALLBACK)
+  const getImageSrc = (item) => {
+    return item?.image || item?.logo || "/default-avatar.png";
+  };
+
+  // ✅ OPEN MODAL
   const openModal = (item) => {
     setSelectedItem(item);
     setFormData(item);
@@ -25,6 +36,7 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
     setEditMode(false);
   };
 
+  // ✅ HANDLE INPUT CHANGE
   const handleChange = (key, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -32,31 +44,33 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
     }));
   };
 
-const handleSave = async () => {
-  try {
-    const res = await fetch(`/api/items/${formData.id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+  // ✅ SAVE EDIT
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`/api/items/${formData.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error);
 
-    if (onUpdate) onUpdate(data.data);
+      if (onUpdate) onUpdate(data.data);
 
-    setSelectedItem(data.data);
-    setEditMode(false);
+      setSelectedItem(data.data);
+      setEditMode(false);
 
-    alert("Saved successfully ✅");
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-};
+      alert("Saved successfully ✅");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
 
+  // ✅ COPY VALUE
   const copyToClipboard = (value) => {
     navigator.clipboard.writeText(String(value));
   };
@@ -70,7 +84,9 @@ const handleSave = async () => {
             <tr className="bg-gray-50 border-b">
               <th className="p-4 font-semibold text-gray-700">Main Info</th>
               <th className="p-4 font-semibold text-gray-700">Date</th>
-              <th className="p-4 font-semibold text-gray-700 text-right">Actions</th>
+              <th className="p-4 font-semibold text-gray-700 text-right">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -81,16 +97,11 @@ const handleSave = async () => {
                 className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
                 onClick={() => openModal(item)}
               >
+                {/* MAIN INFO */}
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <Image
-                      src={
-                        item.image?.startsWith("/")
-                          ? item.image
-                          : item.logo?.startsWith("/")
-                          ? item.logo
-                          : "https://via.placeholder.com/40"
-                      }
+                      src={getImageSrc(item)}
                       alt="item"
                       width={40}
                       height={40}
@@ -99,17 +110,24 @@ const handleSave = async () => {
 
                     <div>
                       <div className="font-bold text-gray-900">
-                        {item.name || item.device || item.customer || "Unknown"}
+                        {item.name ||
+                          item.device ||
+                          item.customer ||
+                          "Unknown"}
                       </div>
-                      <div className="text-xs text-gray-500">ID: {item.id}</div>
+                      <div className="text-xs text-gray-500">
+                        ID: {item.id}
+                      </div>
                     </div>
                   </div>
                 </td>
 
+                {/* DATE */}
                 <td className="p-4 text-gray-600 text-sm">
                   {item.date || "N/A"}
                 </td>
 
+                {/* ACTIONS */}
                 <td className="p-4 text-right">
                   <button
                     onClick={(e) => {
@@ -153,13 +171,7 @@ const handleSave = async () => {
             {(formData.image || formData.logo) && (
               <div className="mb-4">
                 <Image
-                  src={
-                    formData.image?.startsWith("/")
-                      ? formData.image
-                      : formData.logo?.startsWith("/")
-                      ? formData.logo
-                      : "https://via.placeholder.com/80"
-                  }
+                  src={getImageSrc(formData)}
                   alt="preview"
                   width={80}
                   height={80}
@@ -192,7 +204,9 @@ const handleSave = async () => {
                       <input
                         className="border rounded p-2 text-sm w-full"
                         value={value || ""}
-                        onChange={(e) => handleChange(key, e.target.value)}
+                        onChange={(e) =>
+                          handleChange(key, e.target.value)
+                        }
                       />
                     ) : (
                       <div className="text-gray-800 break-all">
