@@ -29,6 +29,14 @@ export async function DELETE(req) {
       }
     }
 
+    if (item?.logo) {
+      const logoPath = path.join(process.cwd(), "public", item.logo);
+
+      if (fs.existsSync(logoPath)) {
+        fs.unlinkSync(logoPath);
+      }
+    }
+
     db[type] = db[type].filter(i => String(i.id) !== String(id));
 
     writeDB(db);

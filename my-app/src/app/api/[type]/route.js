@@ -27,13 +27,13 @@ export async function POST(req, { params }) {
         const bytes = await value.arrayBuffer();
         const buffer = Buffer.from(bytes);
         const fileName = `${Date.now()}-${value.name}`;
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
 
         await mkdir(uploadDir, { recursive: true });
 
         await writeFile(path.join(uploadDir, fileName), buffer);
 
-        item[key] = `/uploads/${fileName}`;
+        item[key] = `/uploads/logos/${fileName}`;
       } else if (typeof value === "string" && value !== "[object Object]") {
         if ((key === "logo" || key === "image") && !value) continue;
         if (value === "undefined") continue;
@@ -48,7 +48,7 @@ export async function POST(req, { params }) {
     // =========================
     if (type === "settings") {
       // ✅ DELETE OLD LOGO IF NEW ONE UPLOADED
-      if (item.logo && db.settings?.logo?.startsWith("/uploads/")) {
+      if (item.logo && db.settings?.logo?.startsWith("/uploads/logos/")) {
         const oldLogoPath = path.join(
           process.cwd(),
           "public",

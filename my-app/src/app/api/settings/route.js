@@ -22,7 +22,7 @@ export async function POST(req) {
       );
     }
 
-    let logoPath = db.settings?.logo || "/uploads/default.png";
+    let logoPath = db.settings?.logo || "/uploads/logos/default.png";
 
     // 🖼️ HANDLE IMAGE UPLOAD
     if (logoFile && typeof logoFile !== "string") {
@@ -30,7 +30,7 @@ export async function POST(req) {
       const buffer = Buffer.from(bytes);
 
       const fileName = `${Date.now()}-${logoFile.name}`;
-      const uploadDir = path.join(process.cwd(), "public/uploads");
+      const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
       const uploadPath = path.join(uploadDir, fileName);
 
       // ✅ ensure folder exists
@@ -39,7 +39,7 @@ export async function POST(req) {
       }
 
       // ✅ DELETE OLD LOGO FILE BEFORE SAVING NEW ONE
-      if (db.settings?.logo?.startsWith("/uploads/")) {
+      if (db.settings?.logo?.startsWith("/uploads/logos/")) {
         const oldLogoPath = path.join(process.cwd(), "public", db.settings.logo);
         if (fs.existsSync(oldLogoPath)) {
           fs.unlinkSync(oldLogoPath);
@@ -48,7 +48,7 @@ export async function POST(req) {
 
       fs.writeFileSync(uploadPath, buffer);
 
-      logoPath = `/uploads/${fileName}`;
+      logoPath = `/uploads/logos/${fileName}`;
     }
 
     // 🔄 UPDATE SETTINGS
