@@ -38,6 +38,14 @@ export async function POST(req) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
+      // ✅ DELETE OLD LOGO FILE BEFORE SAVING NEW ONE
+      if (db.settings?.logo?.startsWith("/uploads/")) {
+        const oldLogoPath = path.join(process.cwd(), "public", db.settings.logo);
+        if (fs.existsSync(oldLogoPath)) {
+          fs.unlinkSync(oldLogoPath);
+        }
+      }
+
       fs.writeFileSync(uploadPath, buffer);
 
       logoPath = `/uploads/${fileName}`;
