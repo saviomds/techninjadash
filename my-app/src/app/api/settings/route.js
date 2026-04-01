@@ -1,7 +1,6 @@
-import fs from "fs";
+import { readFile, writeFile, mkdir, unlink, access, constants } from "fs/promises";
 import path from "path";
-
-const dbPath = path.join(process.cwd(), "db/db.json");
+import { readDB, writeDB } from "@/lib/db";
 
 export async function POST(req) {
   try {
@@ -11,17 +10,7 @@ export async function POST(req) {
     const currency = formData.get("currency");
     const logoFile = formData.get("logo");
 
-    // ✅ SAFE DB READ (PREVENT CRASH)
-    let db;
-    try {
-      db = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
-    } catch (err) {
-      return Response.json(
-        { error: "Database file is corrupted JSON" },
-        { status: 500 }
-      );
-    }
-
+    const db = await readDB();
     let logoPath = db.settings?.logo || "/uploads/logos/default.png";
 
     // 🖼️ HANDLE IMAGE UPLOAD
@@ -34,33 +23,39 @@ export async function POST(req) {
       const uploadPath = path.join(uploadDir, fileName);
 
       // ✅ ensure folder exists
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      await mkdir(uploadDir, { recursive: true });
 
       // ✅ DELETE OLD LOGO FILE BEFORE SAVING NEW ONE
       if (db.settings?.logo?.startsWith("/uploads/logos/")) {
         const oldLogoPath = path.join(process.cwd(), "public", db.settings.logo);
-        if (fs.existsSync(oldLogoPath)) {
-          fs.unlinkSync(oldLogoPath);
+        try {
+          await access(oldLogoPath, constants.F_OK); // Check if file exists
+          await unlink(oldLogoPath);
+          console.log("Old logo deleted:", oldLogoPath);
+        } catch (unlinkErr) {
+          if (unlinkErr.code === 'ENOENT') {
+            console.log("Old logo file not found, skipping deletion.");
+          } else {
+            console.error("Failed to delete old logo:", unlinkErr);
+          }
         }
       }
 
-      fs.writeFileSync(uploadPath, buffer);
+      await writeFile(uploadPath, buffer);
 
       logoPath = `/uploads/logos/${fileName}`;
     }
 
-    // 🔄 UPDATE SETTINGS
+    // 🔄 UPDATE SETTINGS (KEEPING EXISTING FIELDS)
     db.settings = {
       ...db.settings,
-      shopName,
-      currency,
+      shopName: shopName || db.settings?.shopName,
+      currency: currency || db.settings?.currency,
       logo: logoPath,
     };
 
     // 💾 SAVE DB
-    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+    await writeDB(db);
 
     return Response.json({
       success: true,

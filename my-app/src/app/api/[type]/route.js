@@ -5,7 +5,8 @@ import path from "path";
 
 export async function POST(req, { params }) {
   try {
-    const { type } = params;
+    // ✅ Await params in Next.js 15+ to get the string value
+    const { type } = await params;
 
     const db = await readDB();
     const form = await req.formData();
@@ -27,13 +28,15 @@ export async function POST(req, { params }) {
         const bytes = await value.arrayBuffer();
         const buffer = Buffer.from(bytes);
         const fileName = `${Date.now()}-${value.name}`;
-        const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
+        
+        // ✅ Dynamic subfolder: "logos" for settings, otherwise use the type (products, staff, etc.)
+        const subFolder = type === "settings" ? "logos" : type;
+        const uploadDir = path.join(process.cwd(), "public", "uploads", subFolder);
 
         await mkdir(uploadDir, { recursive: true });
-
         await writeFile(path.join(uploadDir, fileName), buffer);
 
-        item[key] = `/uploads/logos/${fileName}`;
+        item[key] = `/uploads/${subFolder}/${fileName}`;
       } else if (typeof value === "string" && value !== "[object Object]") {
         if ((key === "logo" || key === "image") && !value) continue;
         if (value === "undefined") continue;
