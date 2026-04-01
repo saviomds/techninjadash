@@ -1,19 +1,44 @@
 {
-  "products": [],
+  "products": [
+    {
+      "id": "1775024827096",
+      "date": "2026-04-01",
+      "name": "iPhone 11 Screen",
+      "category": "Spare Parts",
+      "description": "Original quality replacement screen for iPhone 11",
+      "stock": 10,
+      "price": 4500,
+      "image": "/uploads/1775024827099-iphone.webp"
+    }
+  ],
   "repairs": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": "1775025145738",
+      "date": "2026-04-01",
+      "customer": "Sarah Lee",
+      "phone": "54981234",
+      "name": "Hp elite",
+      "qty": 2,
+      "price": 2000000,
+      "payment": "pending",
+      "status": "done",
+      "description": "black color",
+      "image": "/uploads/1775025145766-hpelite.webp"
+    }
+  ],
   "customers": [],
   "staff": [
     {
-      "id": "1774989137108",
-      "date": "2026-03-31",
-      "name": "Dominique Savio ",
+      "id": "1775025201026",
+      "date": "2026-04-01",
+      "name": "Dominique Savio MANISHIMWE",
       "phone": "0786731976",
       "email": "dominiquesavio2003@gmail.com",
       "role": "IT",
-      "salary": 424222,
+      "salary": 20000,
       "description": "MIT",
-      "image": "/uploads/1774989137109-user.jpg"
+      "image": "/uploads/1775025201026-user.jpg"
     }
   ],
   "settings": {
