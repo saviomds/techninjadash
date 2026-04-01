@@ -28,10 +28,13 @@ export default function ForgetPwd() {
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
+
+    const formData = new FormData();
+    formData.append("email", email);
+
     const res = await fetch("/api/forgot-password", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: formData,
     });
     const data = await res.json();
     if (data.success) {

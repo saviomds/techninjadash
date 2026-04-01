@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { useState } from "react";
 
@@ -8,22 +10,18 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
 
   if (!Array.isArray(data) || data.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-10">
-        No items found in {view}.
-      </p>
+      <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+        <span className="text-4xl mb-4 opacity-20">📂</span>
+        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+          No records found in {view}
+        </p>
+      </div>
     );
   }
 
-  // ✅ FORMAT LABELS
-  const formatKey = (key) =>
-    key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const formatKey = (key) => key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const getImageSrc = (item) => item?.image || item?.logo || "/default-avatar.png";
 
-  // ✅ UNIVERSAL IMAGE HANDLER (CLOUDINARY + LOCAL + FALLBACK)
-  const getImageSrc = (item) => {
-    return item?.image || item?.logo || "/default-avatar.png";
-  };
-
-  // ✅ OPEN MODAL
   const openModal = (item) => {
     setSelectedItem(item);
     setFormData(item);
@@ -36,57 +34,41 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
     setEditMode(false);
   };
 
-  // ✅ HANDLE INPUT CHANGE
   const handleChange = (key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // ✅ SAVE EDIT
   const handleSave = async () => {
     try {
       const res = await fetch(`/api/items/${formData.id}`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error);
-
-      if (onUpdate) onUpdate(data.data);
-
-      setSelectedItem(data.data);
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+      if (onUpdate) onUpdate(result.data);
+      setSelectedItem(result.data);
       setEditMode(false);
-
-      alert("Saved successfully ✅");
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error(err);
     }
   };
 
-  // ✅ COPY VALUE
-  const copyToClipboard = (value) => {
+  const copyToClipboard = (e, value) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(String(value));
   };
 
   return (
     <>
-      {/* TABLE */}
-      <div className="overflow-x-auto bg-white rounded-lg border">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-separate border-spacing-y-2">
           <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="p-4 font-semibold text-gray-700">Main Info</th>
-              <th className="p-4 font-semibold text-gray-700">Date</th>
-              <th className="p-4 font-semibold text-gray-700 text-right">
-                Actions
-              </th>
+            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              <th className="px-6 py-3">Primary Entity</th>
+              <th className="px-6 py-3">Registry Date</th>
+              <th className="px-6 py-3 text-right">Management</th>
             </tr>
           </thead>
 
@@ -94,49 +76,48 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
             {data.map((item) => (
               <tr
                 key={item.id}
-                className="border-b hover:bg-gray-50 transition-colors cursor-pointer"
+                className="group bg-white border border-slate-100 hover:border-blue-300 shadow-sm hover:shadow-md transition-all cursor-pointer"
                 onClick={() => openModal(item)}
               >
-                {/* MAIN INFO */}
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={getImageSrc(item)}
-                      alt="item"
-                      width={40}
-                      height={40}
-                      className="rounded-md object-cover border"
-                    />
-
+                {/* ENTITY INFO */}
+                <td className="px-6 py-4 rounded-l-2xl border-y border-l border-slate-100 group-hover:border-blue-100">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-11 h-11 flex-shrink-0">
+                      <Image
+                        src={getImageSrc(item)}
+                        alt="item"
+                        fill
+                        className="rounded-xl object-cover border border-slate-100 shadow-sm"
+                      />
+                    </div>
                     <div>
-                      <div className="font-bold text-gray-900">
-                        {item.name ||
-                          item.device ||
-                          item.customer ||
-                          "Unknown"}
+                      <div className="font-bold text-slate-900 text-sm">
+                        {item.name || item.device || item.customer || "Unlabeled Entry"}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        ID: {item.id}
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                        REF: {String(item.id).slice(-8)}
                       </div>
                     </div>
                   </div>
                 </td>
 
                 {/* DATE */}
-                <td className="p-4 text-gray-600 text-sm">
-                  {item.date || "N/A"}
+                <td className="px-6 py-4 border-y border-slate-100 group-hover:border-blue-100 text-xs font-semibold text-slate-500">
+                  {item.date || "—"}
                 </td>
 
                 {/* ACTIONS */}
-                <td className="p-4 text-right">
+                <td className="px-6 py-4 rounded-r-2xl border-y border-r border-slate-100 group-hover:border-blue-100 text-right">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteItem(item.id);
                     }}
-                    className="text-red-500 hover:bg-red-50 p-2 rounded-lg"
+                    className="opacity-0 group-hover:opacity-100 p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200"
                   >
-                    🗑️
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </td>
               </tr>
@@ -145,95 +126,101 @@ export default function Table({ data, view, deleteItem, onUpdate }) {
         </table>
       </div>
 
-      {/* MODAL */}
+      {/* DETAIL MODAL */}
       {selectedItem && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 w-[90%] max-w-lg max-h-[80vh] overflow-y-auto"
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={closeModal}>
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
+          
+          <div 
+            className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* HEADER */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Item Details</h2>
-
-              <button
-                onClick={() => setEditMode(!editMode)}
-                className="text-sm px-3 py-1 rounded bg-gray-100 hover:bg-gray-200"
-              >
-                {editMode ? "View" : "Edit"}
-              </button>
-            </div>
-
-            {/* IMAGE */}
-            {(formData.image || formData.logo) && (
-              <div className="mb-4">
+            {/* MODAL HEADER */}
+            <div className="px-10 pt-10 pb-6 flex justify-between items-start">
+              <div className="flex items-center gap-5">
                 <Image
                   src={getImageSrc(formData)}
                   alt="preview"
-                  width={80}
-                  height={80}
-                  className="rounded-lg border object-cover"
+                  width={64}
+                  height={64}
+                  className="rounded-2xl border-2 border-white shadow-xl object-cover"
                 />
+                <div>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Record Intelligence</h2>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em]">{view} Database</p>
+                </div>
               </div>
-            )}
-
-            {/* CONTENT */}
-            <div className="space-y-3 text-sm">
-              {Object.entries(formData).map(([key, value]) => {
-                if (key === "image" || key === "logo") return null;
-
-                return (
-                  <div key={key} className="flex flex-col gap-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-600">
-                        {formatKey(key)}
-                      </span>
-
-                      <button
-                        onClick={() => copyToClipboard(value)}
-                        className="text-xs text-blue-500 hover:underline"
-                      >
-                        Copy
-                      </button>
-                    </div>
-
-                    {editMode ? (
-                      <input
-                        className="border rounded p-2 text-sm w-full"
-                        value={value || ""}
-                        onChange={(e) =>
-                          handleChange(key, e.target.value)
-                        }
-                      />
-                    ) : (
-                      <div className="text-gray-800 break-all">
-                        {String(value)}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              <button 
+                onClick={() => setEditMode(!editMode)}
+                className={`text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full transition-all ${
+                  editMode ? "bg-orange-100 text-orange-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                {editMode ? "Exit Edit" : "Modify Record"}
+              </button>
             </div>
 
-            {/* ACTIONS */}
-            <div className="mt-5 flex gap-2">
-              {editMode && (
+            {/* MODAL CONTENT */}
+            <div className="px-10 pb-10 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <div className="grid grid-cols-1 gap-4">
+                {Object.entries(formData).map(([key, value]) => {
+                  if (key === "image" || key === "logo" || key === "id") return null;
+
+                  return (
+                    <div key={key} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-colors hover:border-blue-200">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          {formatKey(key)}
+                        </label>
+                        {!editMode && (
+                          <button
+                            onClick={(e) => copyToClipboard(e, value)}
+                            className="text-[9px] font-bold text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            COPY
+                          </button>
+                        )}
+                      </div>
+
+                      {editMode ? (
+                        <input
+                          className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                          value={value || ""}
+                          onChange={(e) => handleChange(key, e.target.value)}
+                        />
+                      ) : (
+                        <div className="text-sm font-bold text-slate-800 break-all leading-relaxed">
+                          {value || <span className="text-slate-300 font-normal italic">No data available</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* MODAL FOOTER */}
+            <div className="p-8 border-t border-slate-50 bg-slate-50/30 flex gap-4">
+              {editMode ? (
                 <button
                   onClick={handleSave}
-                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+                  className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
                 >
-                  Save Changes
+                  Commit Changes
+                </button>
+              ) : (
+                <button
+                  onClick={closeModal}
+                  className="flex-[2] bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all"
+                >
+                  Close Inquiry
                 </button>
               )}
-
               <button
                 onClick={closeModal}
-                className="flex-1 bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800"
+                className="flex-1 bg-white border border-slate-200 text-slate-400 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:text-slate-600 transition-all"
               >
-                Close
+                Dismiss
               </button>
             </div>
           </div>

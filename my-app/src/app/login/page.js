@@ -51,7 +51,8 @@ export default function Login() {
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl shadow w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <LoginLogo settings={settings} />
-          <h1 className="text-2xl font-bold mt-4 text-black text-center">TechNinja Login</h1>
+          <h1 className="text-2xl font-bold mt-4 text-black text-center">{settings?.shopName || "TechNinja"} </h1>
+          <h3 className="text-sm text-gray-500 mt-1 text-center">Welcome back! Please login to your account.</h3>  
         </div>
         {message && <p className="text-red-500 text-sm mb-4 text-center">{message}</p>}
         <input className="w-full p-3 border text-black rounded mb-3"

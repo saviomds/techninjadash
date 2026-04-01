@@ -6,14 +6,15 @@ import Image from "next/image";
 export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
   const router = useRouter();
 
+  // Mapping views to icons for a more professional look
   const menuItems = [
-    "home",
-    "products",
-    "repairs",
-    "orders",
-    "customers",
-    "staff",
-    "settings",
+    { id: "home", icon: "📊" },
+    { id: "products", icon: "📦" },
+    { id: "repairs", icon: "🛠️" },
+    { id: "orders", icon: "📝" },
+    { id: "customers", icon: "👥" },
+    { id: "staff", icon: "👔" },
+    { id: "settings", icon: "⚙️" },
   ];
 
   function logout() {
@@ -26,7 +27,7 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
       {/* MOBILE OVERLAY */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-[2px] transition-opacity"
           onClick={onClose}
         />
       )}
@@ -34,85 +35,97 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
       {/* SIDEBAR */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r shadow-xl
+          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200
           transform transition-transform duration-300 ease-in-out
           md:relative md:translate-x-0
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* HEADER */}
-        <div className="p-5 border-b flex items-center justify-between">
+        {/* HEADER / LOGO SECTION */}
+        <div className="h-20 px-6 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
-            {settings?.logo ? (
-              <Image
-                src={settings.logo}
-                alt="Logo"
-                width={42}
-                height={42}
-                className="rounded-lg object-cover border"
-              />
-            ) : (
-              <div className="w-10 h-10 bg-black text-white flex items-center justify-center rounded-lg font-bold">
-                TN
-              </div>
-            )}
+            <div className="relative w-9 h-9 flex-shrink-0">
+              {settings?.logo ? (
+                <Image
+                  src={settings.logo}
+                  alt="Logo"
+                  fill
+                  className="rounded-lg object-cover border border-slate-100"
+                />
+              ) : (
+                <div className="w-full h-full bg-slate-900 text-white flex items-center justify-center rounded-lg text-xs font-black italic">
+                  TN
+                </div>
+              )}
+            </div>
 
-            <div>
-              <h1 className="font-bold text-lg text-gray-900 leading-tight">
+            <div className="overflow-hidden">
+              <h1 className="font-bold text-sm text-slate-900 truncate tracking-tight uppercase">
                 {settings?.shopName || "TechNinja"}
               </h1>
-              <p className="text-xs text-gray-500">Admin Dashboard</p>
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mt-1">
+                Management
+              </p>
             </div>
           </div>
 
-          {/* CLOSE BTN MOBILE */}
-          <button
-            onClick={onClose}
-            className="md:hidden text-gray-500 hover:text-black text-xl"
-          >
+          <button onClick={onClose} className="md:hidden p-2 hover:bg-slate-50 rounded-lg text-slate-400">
             ✕
           </button>
         </div>
 
-        {/* MENU */}
+        {/* NAVIGATION MENU */}
         <nav className="p-4 space-y-1">
-          {menuItems.map((v) => (
+          <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 mt-2">
+            Main Menu
+          </p>
+
+          {menuItems.map((item) => (
             <div
-              key={v}
+              key={item.id}
               onClick={() => {
-                setView(v);
+                setView(item.id);
                 onClose();
               }}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium capitalize
+              className={`
+                group flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-200
                 ${
-                  view === v
-                    ? "bg-black text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
+                  view === item.id
+                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100 shadow-sm shadow-blue-50"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 }
               `}
             >
-              {/* active indicator dot */}
-              <div
-                className={`w-2 h-2 rounded-full transition-all
-                  ${view === v ? "bg-white" : "bg-gray-300 group-hover:bg-black"}
-                `}
-              />
+              <div className="flex items-center gap-3">
+                <span className={`text-lg transition-transform duration-200 ${view === item.id ? 'scale-110' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}>
+                  {item.icon}
+                </span>
+                <span className="text-sm font-semibold capitalize tracking-tight">
+                  {item.id}
+                </span>
+              </div>
 
-              {v}
+              {/* Active Indicator Bar */}
+              {view === item.id && (
+                <div className="w-1 h-4 bg-blue-600 rounded-full animate-in slide-in-from-right-1 duration-300" />
+              )}
             </div>
           ))}
-
-          {/* LOGOUT */}
-          <div className="pt-6 mt-6 border-t">
-            <button
-              onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition"
-            >
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              Logout
-            </button>
-          </div>
         </nav>
+
+        {/* FOOTER / LOGOUT */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-50 bg-slate-50/30">
+          <button
+            onClick={logout}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-lg opacity-60 group-hover:opacity-100">🚪</span>
+              <span className="text-sm font-bold tracking-tight">Sign Out</span>
+            </div>
+            <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+          </button>
+        </div>
       </aside>
     </>
   );

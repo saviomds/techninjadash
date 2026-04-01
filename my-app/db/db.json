@@ -3,9 +3,18 @@
   "repairs": [],
   "orders": [],
   "customers": [],
-  "staff": [],
+  "staff": [
+    {
+      "id": "1775072222907",
+      "date": "2026-04-01",
+      "name": "Dominique Savio M",
+      "role": "MIT",
+      "image": "https://res.cloudinary.com/du7wgettf/image/upload/v1775072227/staff/fc6m3lns62typ20kfse9.jpg",
+      "image_public_id": "staff/fc6m3lns62typ20kfse9"
+    }
+  ],
   "settings": {
-    "shopName": "TechNinja ",
+    "shopName": "TechNinja Pro",
     "currency": "Rs",
     "logo": "https://res.cloudinary.com/du7wgettf/image/upload/v1775062003/logos/gxhzo0ocxpww3ahqhxhv.jpg",
     "logo_public_id": "logos/gxhzo0ocxpww3ahqhxhv"
