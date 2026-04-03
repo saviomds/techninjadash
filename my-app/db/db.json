@@ -39,7 +39,7 @@
       "name": "Urban Wardrobe",
       "description": "This item is an \"Urban Wardrobe\" art print on canvas featuring a rhinoceros dressed in a yellow parka. ",
       "price": 8000,
-      "category": "1",
+      "category": "Art",
       "image": "https://res.cloudinary.com/du7wgettf/image/upload/v1775145351/products/jqvnly1j4jhjjzd0xkmb.jpg",
       "image_public_id": "products/jqvnly1j4jhjjzd0xkmb"
     },
@@ -93,7 +93,7 @@
       "description": "These are the iconic Hermès Oran sandals, featured here in a neutral Etoupe color. ",
       "stock": 1,
       "price": 15000,
-      "category": "1",
+      "category": "shoe",
       "image": "https://res.cloudinary.com/du7wgettf/image/upload/v1775146280/products/vww3dwpdqncndjl88xok.webp",
       "image_public_id": "products/vww3dwpdqncndjl88xok"
     },

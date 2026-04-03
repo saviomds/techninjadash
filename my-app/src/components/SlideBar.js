@@ -2,11 +2,29 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useSyncExternalStore, useState } from "react";
+
+// Helper to detect if we are on the client side
+const emptySubscribe = () => () => {};
+function useHasMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,  // Client value
+    () => false  // Server value (Initial render)
+  );
+}
 
 export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
   const router = useRouter();
+  const hasMounted = useHasMounted(); // Replaces useState/useEffect
+  const [imgError, setImgError] = useState(false);
+  const [prevLogo, setPrevLogo] = useState(settings?.logo);
 
-  // Mapping views to icons for a more professional look
+  if (settings?.logo !== prevLogo) {
+    setPrevLogo(settings?.logo);
+    setImgError(false);
+  }
+
   const menuItems = [
     { id: "home", icon: "📊" },
     { id: "products", icon: "📦" },
@@ -24,15 +42,13 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
 
   return (
     <>
-      {/* MOBILE OVERLAY */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-[2px] transition-opacity"
+          className="fixed inset-0 bg-slate-900/40 z-40 md:hidden backdrop-blur-[2px]"
           onClick={onClose}
         />
       )}
 
-      {/* SIDEBAR */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200
@@ -41,20 +57,26 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* HEADER / LOGO SECTION */}
         <div className="h-20 px-6 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-3">
             <div className="relative w-9 h-9 flex-shrink-0">
-              {settings?.logo ? (
+              {/* 1. If not mounted yet (Server), show TN
+                2. If mounted but no logo, show TN
+                3. If mounted AND has logo, show Image
+              */}
+              {hasMounted && settings?.logo && !imgError ? (
                 <Image
                   src={settings.logo}
                   alt="Logo"
                   fill
+                  sizes="36px"
                   className="rounded-lg object-cover border border-slate-100"
+                  priority
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 <div className="w-full h-full bg-slate-900 text-white flex items-center justify-center rounded-lg text-xs font-black italic">
-                  TN
+                  {settings?.shopName?.substring(0, 2).toUpperCase() || "TN"}
                 </div>
               )}
             </div>
@@ -74,7 +96,6 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
           </button>
         </div>
 
-        {/* NAVIGATION MENU */}
         <nav className="p-4 space-y-1">
           <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4 mt-2">
             Main Menu
@@ -89,8 +110,7 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
               }}
               className={`
                 group flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-200
-                ${
-                  view === item.id
+                ${view === item.id
                     ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100 shadow-sm shadow-blue-50"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                 }
@@ -104,8 +124,6 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
                   {item.id}
                 </span>
               </div>
-
-              {/* Active Indicator Bar */}
               {view === item.id && (
                 <div className="w-1 h-4 bg-blue-600 rounded-full animate-in slide-in-from-right-1 duration-300" />
               )}
@@ -113,7 +131,6 @@ export default function SlideBar({ view, setView, settings, isOpen, onClose }) {
           ))}
         </nav>
 
-        {/* FOOTER / LOGOUT */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-50 bg-slate-50/30">
           <button
             onClick={logout}

@@ -22,8 +22,14 @@ export default function ProfileDropdown({ settings }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [prevLogo, setPrevLogo] = useState(settings?.logo);
   const dropdownRef = useRef(null);
   const router = useRouter();
+
+  if (settings?.logo !== prevLogo) {
+    setPrevLogo(settings?.logo);
+    setImgError(false);
+  }
 
   const handleNav = (path) => {
     setIsOpen(false);

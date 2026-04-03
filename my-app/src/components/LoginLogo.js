@@ -6,6 +6,12 @@ import { useState } from "react";
 export default function LoginLogo({settings}) {
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
+  const [prevLogo, setPrevLogo] = useState(settings?.logo);
+
+  if (settings?.logo !== prevLogo) {
+    setPrevLogo(settings?.logo);
+    setImgError(false);
+  }
 
     return (
         <div className="flex items-center gap-3">
@@ -22,7 +28,7 @@ export default function LoginLogo({settings}) {
             ) : (
             <div className="w-10 h-10 bg-black text-white flex items-center justify-center rounded-lg font-bold cursor-pointer"
                     onClick={() => router.push("/")}>
-                TN
+                {settings?.shopName?.substring(0, 2).toUpperCase() || "TN"}
             </div>
             )}
         </div>
