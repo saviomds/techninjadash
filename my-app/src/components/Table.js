@@ -33,7 +33,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
   const filteredData = useMemo(() => {
     const query = searchQuery.toLowerCase();
     return data.filter((item) => {
-      const searchString = `${item.name} ${item.device} ${item.customer} ${item.id} ${item.category} ${item.description || ""}`.toLowerCase();
+      const searchString = `${item.name || ""} ${item.device || ""} ${item.customer || ""} ${item.id || ""} ${item.category || ""} ${item.description || ""}`.toLowerCase();
       return searchString.includes(query);
     });
   }, [data, searchQuery]);
@@ -77,41 +77,8 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
     if (errors.includes(key)) setErrors(prev => prev.filter(e => e !== key));
   };
 
-  const handleSave = async () => {
-    const requiredFields = Object.keys(formData).filter(k => !["image", "logo", "id"].includes(k));
-    const missingFields = requiredFields.filter(k => !formData[k] || formData[k].toString().trim() === "");
-    const missingImage = isImageMissing(formData);
-
-    if (missingFields.length > 0 || missingImage) {
-      setErrors(missingImage ? [...missingFields, "image_source"] : missingFields);
-      setStatus({ type: "error", message: "Required fields are empty." });
-      return;
-    }
-
-    setStatus({ type: "loading", message: "Synchronizing..." });
-    try {
-      const res = await fetch(`/api/items/${formData.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Update failed.");
-
-      setStatus({ type: "success", message: "Registry updated successfully!" });
-      if (onUpdate) onUpdate(result.data);
-      setTimeout(() => {
-        setSelectedItem(result.data);
-        setEditMode(false);
-        setStatus({ type: "", message: "" });
-      }, 1500);
-    } catch (err) {
-      setStatus({ type: "error", message: err.message });
-    }
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full overflow-hidden space-y-6">
       {/* LIGHTBOX */}
       {fullscreenImage && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-md transition-colors ${darkMode ? "bg-black/95" : "bg-slate-950/90"}`} onClick={() => setFullscreenImage(null)}>
@@ -121,43 +88,53 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-        <div>
-          <h2 className={`text-xl font-black tracking-tight capitalize ${darkMode ? "text-white" : "text-slate-900"}`}>
+      {/* HEADER SECTION - Now fits tightly */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1">
+        <div className="space-y-1">
+          <h2 className={`text-xl font-black tracking-tight capitalize flex items-center gap-2 ${darkMode ? "text-white" : "text-slate-900"}`}>
+            <span className="w-1.5 h-5 bg-blue-600 rounded-full inline-block"></span>
             {view} <span className={darkMode ? "text-blue-400" : "text-blue-600"}>Registry</span>
           </h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{filteredData.length} Records found</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-3">{filteredData.length} Records found</p>
         </div>
-        <div className="relative w-full md:w-80 group">
+        <div className="relative w-full sm:w-72">
           <input
             type="text"
-            placeholder="Search records..."
-            className={`w-full border border-transparent rounded-2xl py-2.5 px-6 text-sm font-semibold transition-all outline-none ${
+            placeholder="Quick search..."
+            className={`w-full rounded-xl py-2.5 px-5 text-sm font-semibold transition-all outline-none border ${
               darkMode 
-                ? "bg-slate-800 text-white focus:bg-slate-900 focus:border-blue-500" 
-                : "bg-slate-100/50 text-slate-900 focus:bg-white focus:border-blue-500"
+                ? "bg-slate-800 border-slate-700 text-white focus:border-blue-500" 
+                : "bg-white border-slate-200 text-slate-900 focus:border-blue-500 shadow-sm"
             }`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">🔍</span>
         </div>
       </div>
 
-      {/* CATEGORY ASSISTANT */}
+      {/* CATEGORY CHIPS - Optimized for scrolling on mobile */}
       {categories.length > 0 && (
-        <div className="px-2">
-          <div className={`flex flex-wrap items-center gap-2 p-3 rounded-[1.5rem] border transition-colors ${
-            darkMode ? "bg-slate-800/50 border-slate-800" : "bg-slate-50/50 border-slate-100"
-          }`}>
+        <div className="overflow-x-auto pb-1 no-scrollbar">
+          <div className="flex items-center gap-2 min-w-max px-1">
+            <button
+               onClick={() => setSearchQuery("")}
+               className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border ${
+                searchQuery === "" 
+                  ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-900/20" 
+                  : (darkMode ? "bg-slate-900 text-slate-400 border-slate-800 hover:text-white" : "bg-white text-slate-500 border-slate-200")
+              }`}
+            >
+              All
+            </button>
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSearchQuery(cat)}
-                className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all ${
+                className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border ${
                   searchQuery.toLowerCase() === cat.toLowerCase() 
-                    ? "bg-blue-600 text-white" 
-                    : (darkMode ? "bg-slate-900 text-slate-400 border border-slate-700 hover:text-white" : "bg-white text-slate-500 border border-slate-200")
+                    ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-900/20" 
+                    : (darkMode ? "bg-slate-900 text-slate-400 border-slate-800 hover:text-white" : "bg-white text-slate-500 border-slate-200")
                 }`}
               >
                 {cat}
@@ -167,67 +144,104 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
         </div>
       )}
 
-      {/* TABLE */}
-      <div className="overflow-x-auto min-h-[400px]">
-        <table className="w-full text-left border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <th className="px-6 py-3">Primary Entity</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((item) => (
-              <tr key={item.id} className={`group border transition-all cursor-pointer ${
-                darkMode ? "bg-slate-900/50 border-slate-800 hover:bg-slate-800" : "bg-white border-slate-100 hover:shadow-md"
-              }`} onClick={() => openModal(item)}>
-                <td className={`px-6 py-4 rounded-l-2xl border-y border-l transition-colors ${darkMode ? "border-slate-800" : "border-slate-100"}`}>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-11 h-11" onClick={(e) => { e.stopPropagation(); setFullscreenImage(getImageSrc(item)); }}>
-                      <Image src={getImageSrc(item)} alt="item" fill className={`rounded-xl object-cover border shadow-sm ${darkMode ? "border-slate-700" : "border-slate-100"}`} />
-                    </div>
-                    <div>
-                      <div className={`font-bold text-sm ${darkMode ? "text-white" : "text-slate-900"}`}>{item.name || item.customer || item.device || "Unlabeled"}</div>
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">REF: {String(item.id).slice(-8)}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className={`px-6 py-4 rounded-r-2xl border-y border-r transition-colors ${darkMode ? "border-slate-800 text-right" : "border-slate-100 text-right"}`}>
-                  <button onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-all">🗑️</button>
-                </td>
+      {/* TABLE SECTION - Responsive container */}
+      <div className={`overflow-hidden rounded-2xl border transition-colors ${darkMode ? "border-slate-800 bg-slate-950/20" : "border-slate-100 bg-white shadow-sm"}`}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className={`text-[10px] font-black text-slate-400 uppercase tracking-widest border-b ${darkMode ? "border-slate-800 bg-slate-900/50" : "border-slate-50 bg-slate-50/50"}`}>
+                <th className="px-6 py-4">Identity & Details</th>
+                <th className="hidden md:table-cell px-6 py-4">Status / Category</th>
+                <th className="px-6 py-4 text-right">Options</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100/10 transition-all">
+              {currentItems.length > 0 ? (
+                currentItems.map((item) => (
+                  <tr 
+                    key={item.id} 
+                    className={`group transition-all cursor-pointer ${
+                      darkMode ? "hover:bg-slate-800/40" : "hover:bg-slate-50/50"
+                    }`} 
+                    onClick={() => openModal(item)}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-12 h-12 flex-shrink-0 group/img" onClick={(e) => { e.stopPropagation(); setFullscreenImage(getImageSrc(item)); }}>
+                          <Image src={getImageSrc(item)} alt="item" fill className={`rounded-xl object-cover border transition-transform group-hover/img:scale-105 ${darkMode ? "border-slate-700" : "border-slate-100"}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className={`font-bold text-sm truncate max-w-[150px] sm:max-w-xs ${darkMode ? "text-white" : "text-slate-900"}`}>
+                            {item.name || item.customer || item.device || "Unlabeled Entity"}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-tight font-mono">
+                            ID: {String(item.id).slice(-8)}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="hidden md:table-cell px-6 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                        darkMode ? "bg-slate-800 text-slate-400" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {item.category || item.status || "General"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button className={`p-2 rounded-lg md:opacity-0 md:group-hover:opacity-100 transition-all ${darkMode ? "text-slate-400 hover:bg-slate-700" : "text-slate-400 hover:bg-slate-100"}`}>
+                          👁️
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }} 
+                          className="p-2 text-red-500/60 hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 hover:bg-red-500/10 rounded-lg transition-all"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="px-6 py-20 text-center">
+                    <div className="text-slate-400 text-sm italic font-medium">No records found matching your criteria</div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
+      {/* PAGINATION - Now Sticky at bottom if data is long */}
       {totalPages > 1 && (
-        <div className={`flex items-center justify-between px-2 py-4 border-t transition-colors ${
-          darkMode ? "border-slate-800" : "border-slate-100"
-        }`}>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Page {currentPage} of {totalPages}
+        <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-1 py-2`}>
+          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest order-2 sm:order-1">
+            Displaying {currentItems.length} of {filteredData.length} entries
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 order-1 sm:order-2 w-full sm:w-auto">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 border ${
                 darkMode 
-                  ? "bg-slate-800 text-white hover:bg-slate-700 border border-slate-700" 
-                  : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50"
+                  ? "bg-slate-800 text-white border-slate-700 hover:bg-slate-700" 
+                  : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50 shadow-sm"
               }`}
             >
-              Previous
+              Back
             </button>
+            <div className={`px-4 text-[10px] font-black ${darkMode ? "text-white" : "text-slate-900"}`}>
+              {currentPage} / {totalPages}
+            </div>
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 ${
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-30 border shadow-lg ${
                 darkMode 
-                  ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-900/20" 
-                  : "bg-slate-900 text-white hover:bg-slate-800"
+                  ? "bg-blue-600 border-blue-500 text-white shadow-blue-900/20" 
+                  : "bg-slate-900 border-slate-900 text-white hover:bg-slate-800"
               }`}
             >
               Next
@@ -236,63 +250,66 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
         </div>
       )}
 
-      {/* MODAL (unchanged but wrapped in darkMode logic) */}
+      {/* MODAL OVERLAY */}
       {selectedItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={closeModal}>
-          <div className={`relative w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 ${
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto" onClick={closeModal}>
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300"></div>
+          
+          <div className={`relative w-full max-w-xl rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ${
             darkMode ? "bg-slate-900 border border-slate-800" : "bg-white"
           }`} onClick={(e) => e.stopPropagation()}>
-            {/* Modal Content - (Same as previous implementation) */}
-            <div className="p-8 pb-4 flex justify-between items-center">
-              <div className="flex items-center gap-4">
+            
+            {/* Modal Header */}
+            <div className="p-8 pb-6 flex justify-between items-start">
+              <div className="flex items-center gap-5">
                 <div 
-                  className={`cursor-pointer rounded-xl transition-all ${errors.includes('image_source') ? 'ring-4 ring-red-500' : ''}`}
+                  className={`relative w-16 h-16 cursor-pointer rounded-2xl overflow-hidden ring-4 transition-all ${darkMode ? "ring-slate-800 hover:ring-blue-600" : "ring-slate-50 hover:ring-blue-100"}`}
                   onClick={() => setFullscreenImage(getImageSrc(formData))}
                 >
-                  <Image src={getImageSrc(formData)} alt="preview" width={50} height={50} className={`rounded-xl shadow-md ${darkMode ? "border border-slate-700" : ""}`} />
+                  <Image src={getImageSrc(formData)} alt="preview" fill className="object-cover" />
                 </div>
-                <h3 className={`font-black text-xs uppercase tracking-widest ${darkMode ? "text-white" : "text-slate-900"}`}>Profile Editor</h3>
+                <div>
+                  <h3 className={`font-black text-sm uppercase tracking-[0.15em] ${darkMode ? "text-white" : "text-slate-900"}`}>Record Details</h3>
+                  <p className="text-[10px] text-blue-500 font-bold uppercase mt-1">Management Console</p>
+                </div>
               </div>
-              <button onClick={() => setEditMode(!editMode)} className={`text-[10px] font-bold uppercase p-2 px-4 rounded-full transition-colors ${
-                darkMode ? "bg-slate-800 text-slate-300 hover:bg-slate-700" : "bg-slate-100 text-slate-900 hover:bg-slate-200"
-              }`}>
-                {editMode ? "Cancel" : "Modify"}
+              <button onClick={closeModal} className={`p-3 rounded-full transition-colors ${darkMode ? "bg-slate-800 text-slate-400 hover:text-white" : "bg-slate-50 text-slate-400 hover:text-slate-900"}`}>
+                ✕
               </button>
             </div>
 
-            <div className="p-8 pt-0 space-y-4 max-h-[50vh] overflow-y-auto">
-              {Object.entries(formData).map(([key, value]) => {
-                if (["image", "logo", "id"].includes(key)) return null;
-                const isInvalid = errors.includes(key);
+            {/* Modal Body */}
+            <div className="px-8 pb-8 space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(formData).map(([key, value]) => {
+                  if (["image", "logo", "id"].includes(key)) return null;
+                  const isLongText = String(value).length > 30;
 
-                return (
-                  <div key={key}>
-                    <label className="text-[9px] font-black text-slate-400 uppercase ml-1">{formatKey(key)}</label>
-                    {editMode ? (
-                      <input
-                        className={`w-full mt-1 p-3 border rounded-xl text-sm font-semibold transition-all outline-none ${
-                          darkMode 
-                            ? (isInvalid ? "border-red-500 bg-red-950/20 text-white" : "border-slate-800 bg-slate-800 text-white focus:border-blue-500") 
-                            : (isInvalid ? "border-red-500 bg-red-50 text-slate-900" : "border-slate-100 bg-slate-50 focus:border-blue-500")
-                        }`}
-                        value={value || ""}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                      />
-                    ) : (
-                      <div className={`p-3 rounded-xl text-sm font-bold whitespace-pre-wrap ${
-                        darkMode ? "bg-slate-800/50 text-slate-300" : "bg-slate-50 text-slate-700"
-                      }`}>{value || "—"}</div>
-                    )}
-                  </div>
-                );
-              })}
+                  return (
+                    <div key={key} className={isLongText ? "sm:col-span-2" : ""}>
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">{formatKey(key)}</label>
+                      <div className={`p-4 rounded-2xl text-sm font-bold border transition-colors ${
+                        darkMode 
+                          ? "bg-slate-800/40 border-slate-800 text-slate-200" 
+                          : "bg-slate-50/50 border-slate-100 text-slate-700"
+                      }`}>
+                        {value || <span className="opacity-30 italic">Not recorded</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className={`p-6 flex gap-3 transition-colors ${darkMode ? "bg-slate-800/50" : "bg-slate-50"}`}>
+            {/* Modal Footer */}
+            <div className={`p-8 border-t flex gap-3 transition-colors ${darkMode ? "border-slate-800 bg-slate-900" : "border-slate-50 bg-slate-50"}`}>
                <button onClick={closeModal} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border transition-all ${
-                  darkMode ? "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800" : "bg-white border-slate-200 text-slate-900 hover:bg-slate-50"
+                  darkMode ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-900 hover:bg-slate-50 shadow-sm"
                 }`}>
-                  Close Inquiry
+                  Dismiss
+                </button>
+                <button onClick={() => setEditMode(true)} className="flex-[1.5] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-all">
+                  Edit Registry
                 </button>
             </div>
           </div>

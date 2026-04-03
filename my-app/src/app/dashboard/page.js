@@ -131,7 +131,7 @@ export default function Dashboard() {
       <SlideBar 
         view={view} setView={setView} settings={settings} 
         isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} 
-        darkMode={darkMode} // Passing down if needed
+        darkMode={darkMode} 
       />
 
       <div className={`flex-1 flex flex-col min-w-0 border-l ${darkMode ? "border-slate-800" : "border-slate-200"}`}>
@@ -159,27 +159,39 @@ export default function Dashboard() {
               </button>
 
               {showNotifications && (
-                <div className={`absolute left-0 mt-3 w-72 rounded-2xl shadow-2xl z-50 overflow-hidden border ${darkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
-                  <div className={`px-5 py-4 border-b ${darkMode ? "border-slate-800 bg-slate-800/50" : "border-slate-100 bg-slate-50/50"}`}>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alerts Center</p>
+                <>
+                  {/* Backdrop for mobile to focus on the notification center */}
+                  <div className="fixed inset-0 z-40 md:hidden bg-black/20 backdrop-blur-[2px]" onClick={() => setShowNotifications(false)}></div>
+                  
+                  <div className={`
+                    fixed top-20 left-1/2 -translate-x-1/2 w-[90%] 
+                    md:absolute md:top-full md:left-0 md:translate-x-0 md:mt-3 md:w-80 
+                    rounded-2xl shadow-2xl z-50 overflow-hidden border 
+                    animate-in fade-in zoom-in-95 duration-200
+                    ${darkMode ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}
+                  `}>
+                    <div className={`px-5 py-4 border-b flex justify-between items-center ${darkMode ? "border-slate-800 bg-slate-800/50" : "border-slate-100 bg-slate-50/50"}`}>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alerts Center</p>
+                      <button onClick={() => setShowNotifications(false)} className="md:hidden text-slate-400">✕</button>
+                    </div>
+                    <div className="max-h-[350px] overflow-y-auto">
+                      {notifications.length > 0 ? (
+                        notifications.map((n, i) => (
+                          <div key={i} className={`p-4 border-b last:border-0 transition-colors ${darkMode ? "border-slate-800 hover:bg-slate-800" : "border-slate-50 hover:bg-slate-50"}`}>
+                            <p className={`text-[9px] font-bold uppercase mb-1 ${
+                              n.type === 'repair' ? 'text-orange-500' : 
+                              n.type === 'customer' ? 'text-green-500' : 
+                              n.type === 'stock' ? 'text-red-500' : 'text-blue-500'
+                            }`}>{n.title}</p>
+                            <p className={`text-xs font-semibold leading-relaxed ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{n.desc}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-10 text-center text-slate-400 text-xs italic">No new notifications</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="max-h-[300px] overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map((n, i) => (
-                        <div key={i} className={`p-4 border-b ${darkMode ? "border-slate-800 hover:bg-slate-800" : "border-slate-50 hover:bg-slate-50"}`}>
-                          <p className={`text-[9px] font-bold uppercase mb-1 ${
-                            n.type === 'repair' ? 'text-orange-500' : 
-                            n.type === 'customer' ? 'text-green-500' : 
-                            n.type === 'stock' ? 'text-red-500' : 'text-blue-500'
-                          }`}>{n.title}</p>
-                          <p className={`text-xs font-semibold ${darkMode ? "text-slate-300" : "text-slate-700"}`}>{n.desc}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-6 text-center text-slate-400 text-xs italic">No new notifications</div>
-                    )}
-                  </div>
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -194,6 +206,7 @@ export default function Dashboard() {
               {darkMode ? "☀️" : "🌙"}
             </button>
 
+            {/* --- UPDATED BUTTON AREA --- */}
             <div className={`hidden lg:flex items-center gap-2 p-1 rounded-2xl border ${darkMode ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-100"}`}>
               <button 
                 onClick={() => { setView("repairs"); setOpen(true); }}
@@ -207,6 +220,13 @@ export default function Dashboard() {
                 className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${darkMode ? "text-slate-300 hover:text-white hover:bg-slate-700" : "text-slate-600 hover:text-blue-600 hover:bg-white"}`}
               >
                 👤 Customer
+              </button>
+              <div className={`w-[1px] h-4 ${darkMode ? "bg-slate-700" : "bg-slate-200"}`}></div>
+              <button 
+                onClick={() => { setView("orders"); setOpen(true); }}
+                className={`flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${darkMode ? "text-slate-300 hover:text-white hover:bg-slate-700" : "text-slate-600 hover:text-blue-600 hover:bg-white"}`}
+              >
+                📦 Order
               </button>
             </div>
           </div>

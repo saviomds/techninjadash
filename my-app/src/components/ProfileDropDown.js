@@ -56,95 +56,78 @@ export default function ProfileDropdown({ settings, darkMode }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+ 
+
   return (
     <>
-      <div className="fixed top-6 right-8 z-[60]" ref={dropdownRef}>
+      {/* Changed 'fixed top-6 right-8' to 'relative' to flow with the header */}
+      <div className="relative z-[60]" ref={dropdownRef}>
         {/* Trigger Button */}
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center gap-3 pl-1 pr-3 py-1 border rounded-2xl shadow-sm transition-all duration-200 focus:outline-none group ${
+          className={`flex items-center gap-2 md:gap-3 pl-1 pr-1 md:pr-3 py-1 border rounded-2xl shadow-sm transition-all duration-200 focus:outline-none group ${
             darkMode 
               ? "bg-slate-900 border-slate-800 hover:border-blue-500 hover:shadow-blue-900/20" 
               : "bg-white border-slate-100 hover:shadow-md hover:border-blue-200"
           }`}
         >
-          <div className="relative h-9 w-9">
+          <div className="relative h-8 w-8 md:h-9 md:w-9">
             {settings?.logo && !imgError ? (
               <Image
                 src={settings.logo}
                 alt="Logo"
                 width={36}
                 height={36}
-                className={`rounded-xl object-cover border ${darkMode ? "border-slate-700" : "border-slate-50"}`}
+                className={`rounded-xl object-cover border h-full w-full ${darkMode ? "border-slate-700" : "border-slate-50"}`}
                 onError={() => setImgError(true)}
               />
             ) : (
-              <div className={`w-9 h-9 flex items-center justify-center rounded-xl font-black text-xs ${
+              <div className={`w-full h-full flex items-center justify-center rounded-xl font-black text-[10px] md:text-xs ${
                 darkMode ? "bg-blue-600 text-white" : "bg-slate-900 text-white"
               }`}>
                 {settings?.shopName?.substring(0, 2).toUpperCase() || "TN"}
               </div>
             )}
-            <span className={`absolute -top-0.5 -right-0.5 h-3 w-3 bg-blue-500 border-2 rounded-full ${
+            <span className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 md:h-3 md:w-3 bg-blue-500 border-2 rounded-full ${
               darkMode ? "border-slate-900" : "border-white"
             }`}></span>
           </div>
           
-          <div className="hidden md:block text-left">
-            <p className={`text-[11px] font-black uppercase tracking-tight leading-none ${
+          {/* Text is hidden on small mobile devices to prevent overlap */}
+          <div className="hidden sm:block text-left">
+            <p className={`text-[10px] md:text-[11px] font-black uppercase tracking-tight leading-none ${
               darkMode ? "text-white" : "text-slate-900"
             }`}>
               {settings?.shopName || "TechNinja"}
             </p>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">
-              Administrator
+            <p className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">
+              Admin
             </p>
           </div>
 
-          <ChevronDownIcon className={`transition-all duration-300 ${
+          <ChevronDownIcon className={`transition-all duration-300 mr-1 ${
             isOpen ? 'rotate-180 text-blue-500' : 'text-slate-300 group-hover:text-blue-500'
           }`} />
         </button>
 
-        {/* Dropdown Menu */}
+        {/* Dropdown Menu - Added 'right-0' to ensure it aligns to the edge of the button */}
         {isOpen && (
-          <div className={`absolute right-0 mt-3 w-60 origin-top-right rounded-[1.5rem] border z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 shadow-2xl ${
+          <div className={`absolute right-0 mt-3 w-56 md:w-60 origin-top-right rounded-[1.5rem] border z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 shadow-2xl ${
             darkMode 
               ? "bg-slate-900 border-slate-800 shadow-black/50" 
               : "bg-white border-slate-100 shadow-slate-200/50"
           }`}>
+            {/* ... rest of your dropdown menu code stays the same ... */}
             <div className={`px-5 py-5 border-b ${
               darkMode ? "border-slate-800 bg-slate-800/30" : "border-slate-50 bg-slate-50/30"
             }`}>
-              <p className={`text-xs font-black uppercase tracking-widest ${darkMode ? "text-white" : "text-slate-900"}`}>Account Settings</p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                Registry Management
-              </p>
+              <p className={`text-xs font-black uppercase tracking-widest ${darkMode ? "text-white" : "text-slate-900"}`}>Account</p>
             </div>
-
             <div className="p-2">
-              <MenuButton 
-                icon={<InfoIcon />} 
-                label="Support Center" 
-                onClick={() => handleNav('/support')} 
-                darkMode={darkMode}
-              />
-              
-              <MenuButton 
-                icon={<GlobeIcon />} 
-                label="TechNinja Page" 
-                onClick={() => handleExternalNav('https://techninjaa.onrender.com/')} 
-                darkMode={darkMode}
-              />
-
+              <MenuButton icon={<InfoIcon />} label="Support" onClick={() => handleNav('/support')} darkMode={darkMode} />
+              <MenuButton icon={<GlobeIcon />} label="Website" onClick={() => handleExternalNav('https://techninjaa.onrender.com/')} darkMode={darkMode} />
               <div className={`my-1 border-t ${darkMode ? "border-slate-800" : "border-slate-50"}`} />
-              
-              <button 
-                onClick={() => { setIsOpen(false); setShowLogoutModal(true); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-black uppercase tracking-widest rounded-xl transition-colors group ${
-                  darkMode ? "text-red-400 hover:bg-red-950/30" : "text-red-500 hover:bg-red-50"
-                }`}
-              >
+              <button onClick={() => { setIsOpen(false); setShowLogoutModal(true); }} className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-black uppercase tracking-widest rounded-xl transition-colors ${darkMode ? "text-red-400 hover:bg-red-950/30" : "text-red-500 hover:bg-red-50"}`}>
                 <LogOutIcon />
                 <span>Sign Out</span>
               </button>
@@ -152,7 +135,8 @@ export default function ProfileDropdown({ settings, darkMode }) {
           </div>
         )}
       </div>
-
+      {/* ... logout modal code stays the same ... */}
+    
       {/* Logout Modal */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
