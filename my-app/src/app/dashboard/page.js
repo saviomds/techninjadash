@@ -106,7 +106,8 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased">
-      
+      {/* EVERYTHING ELSE UNTOUCHED */}
+
       <SlideBar 
         view={view} setView={setView} settings={settings} 
         isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} 

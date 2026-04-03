@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [settings, setSettings] = useState(null);
   const [message, setMessage] = useState("");
+
   useEffect(() => {
     async function fetchSettings() {
       try {
@@ -18,7 +19,6 @@ export default function Login() {
         const db = await res.json();
         setSettings(db.settings || {});
       } catch (err) {
-        // console.error("Failed to load settings:", err);
         setMessage("Failed to load settings");
       }
     }
@@ -41,7 +41,6 @@ export default function Login() {
       localStorage.setItem("auth", "true");
       router.push("/dashboard");
     } else {
-      // alert("Invalid credentials");
       setMessage("Invalid username or password");
     }
   }
@@ -51,25 +50,37 @@ export default function Login() {
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl shadow w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <LoginLogo settings={settings} />
-          <h1 className="text-2xl font-bold mt-4 text-black text-center">{settings?.shopName || "TechNinja"} </h1>
-          <h3 className="text-sm text-gray-500 mt-1 text-center">Welcome back! Please login to your account.</h3>  
+          <h1 className="text-2xl font-bold mt-4 text-black text-center">
+            {settings?.shopName || "TechNinja"}
+          </h1>
+          <h3 className="text-sm text-gray-500 mt-1 text-center">
+            Welcome back! Please login to your account.
+          </h3>  
         </div>
-        {message && <p className="text-red-500 text-sm mb-4 text-center">{message}</p>}
-        <input className="w-full p-3 border text-black rounded mb-3"
+
+        {message && (
+          <p className="text-red-500 text-sm mb-4 text-center">{message}</p>
+        )}
+
+        <input
+          className="w-full p-3 border text-black rounded mb-3"
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
 
-        <input className="w-full p-3 border text-black rounded mb-4"
+        <input
+          className="w-full p-3 border text-black rounded mb-4"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <Link href="/forgetPwd" className="text-sm text-blue-500 mb-4 block text-right">
           Forgot Password?
         </Link>
+
         <button className="w-full bg-black text-white p-3 rounded">
           Login
         </button>

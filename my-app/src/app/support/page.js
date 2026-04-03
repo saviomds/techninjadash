@@ -1,18 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // --- Icons ---
 const CloseIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
 );
 
 const ActivityIcon = () => (
-  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" className="text-slate-400"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" className="text-slate-400">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
 );
 
 export default function SystemSupportPage() {
   const [activeModal, setActiveModal] = useState(null);
+  const [data, setData] = useState([]);
+
+  // ✅ Fetch data here instead of getStaticProps
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await fetch('/api/data'); // 🔁 replace with your real API
+        const result = await res.json();
+        setData(result);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    }
+
+    loadData();
+  }, []);
 
   const adminCards = [
     { 
@@ -87,18 +108,15 @@ export default function SystemSupportPage() {
         </div>
       </div>
 
-      {/* --- ADVANCED MODAL POPUP --- */}
+      {/* Modal */}
       {activeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          {/* Blur Overlay */}
           <div 
             className="absolute inset-0 bg-slate-900/20 backdrop-blur-md transition-opacity"
             onClick={() => setActiveModal(null)}
           ></div>
           
-          {/* Modal Box */}
           <div className="relative w-full max-w-xl bg-white rounded-[3rem] p-10 shadow-[0_50px_100px_rgba(0,0,0,0.1)] border border-white/20 transform transition-all animate-in zoom-in-95 fade-in duration-200">
-            {/* Close Button */}
             <button 
               onClick={() => setActiveModal(null)}
               className="absolute top-8 right-8 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
