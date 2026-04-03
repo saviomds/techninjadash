@@ -396,8 +396,29 @@
     }
   ],
   "repairs": [],
-  "orders": [],
-  "customers": [],
+  "orders": [
+    {
+      "id": "1775210114683",
+      "date": "2026-04-03",
+      "name": "iPhone 15 Pro",
+      "customer": "Jean Pierre",
+      "image": "https://res.cloudinary.com/du7wgettf/image/upload/v1775210117/orders/dtxocbzbn6tut9dbrcyq.webp",
+      "image_public_id": "orders/dtxocbzbn6tut9dbrcyq",
+      "description": "Brand new : iPhone 15 Pro storage: 200 or Usable Iphone 15 Pro its option but all depends on topup price he can add on"
+    }
+  ],
+  "customers": [
+    {
+      "id": "1775210374694",
+      "date": "2026-04-03",
+      "name": "Jean Pierre",
+      "phone": "250 787273829",
+      "email": "none",
+      "image": "https://res.cloudinary.com/du7wgettf/image/upload/v1775210377/customers/wsx6qoajs8jmdglbwvas.jpg",
+      "image_public_id": "customers/wsx6qoajs8jmdglbwvas",
+      "description": "Thats iphone 13 he has and he need topup to orders in orders section to iphone 15 pro details are in order section and he lived in grandb i can make delivery or he can come to coromandel battery health of iphone 13 is 70% "
+    }
+  ],
   "staff": [
     {
       "id": "1775147220719",
