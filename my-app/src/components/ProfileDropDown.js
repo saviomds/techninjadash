@@ -125,7 +125,6 @@ export default function ProfileDropdown({ settings, darkMode }) {
             </div>
             <div className="p-2">
               <MenuButton icon={<InfoIcon />} label="Support" onClick={() => handleNav('/support')} darkMode={darkMode} />
-              <MenuButton icon={<GlobeIcon />} label="Website" onClick={() => handleExternalNav('https://techninjaa.onrender.com/')} darkMode={darkMode} />
               <div className={`my-1 border-t ${darkMode ? "border-slate-800" : "border-slate-50"}`} />
               <button onClick={() => { setIsOpen(false); setShowLogoutModal(true); }} className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-black uppercase tracking-widest rounded-xl transition-colors ${darkMode ? "text-red-400 hover:bg-red-950/30" : "text-red-500 hover:bg-red-50"}`}>
                 <LogOutIcon />
