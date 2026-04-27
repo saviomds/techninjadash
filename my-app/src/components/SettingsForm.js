@@ -8,10 +8,12 @@ export default function SettingsForm({ settings, setRefreshTrigger, darkMode }) 
   const [formState, setFormState] = useState(settings || {});
   const [logoFile, setLogoFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [status, setStatus] = useState({ type: "", message: "" });
 
   async function handleSettingsUpdate(e) {
     e.preventDefault();
     setIsSaving(true);
+    setStatus({ type: "", message: "" });
 
     const formData = new FormData();
     formData.append("shopName", formState.shopName || "");
@@ -28,13 +30,16 @@ export default function SettingsForm({ settings, setRefreshTrigger, darkMode }) 
       });
 
       if (res.ok) {
-        alert("Settings Saved!");
+        setStatus({ type: "success", message: "Global configurations saved successfully!" });
         setRefreshTrigger((prev) => prev + 1);
+        setLogoFile(null); // Reset logo file input after successful save
       } else {
-        alert("Failed to save settings.");
+        const data = await res.json();
+        setStatus({ type: "error", message: data.error || "Failed to save settings to database." });
       }
     } catch (error) {
       console.error("Update error:", error);
+      setStatus({ type: "error", message: "A network or server error occurred." });
     } finally {
       setIsSaving(false);
     }
@@ -69,6 +74,17 @@ export default function SettingsForm({ settings, setRefreshTrigger, darkMode }) 
 
         <form onSubmit={handleSettingsUpdate} className="p-8 md:p-14 space-y-10 md:space-y-16">
           
+          {status.message && (
+            <div className={`p-5 rounded-2xl text-[11px] md:text-[13px] font-black uppercase tracking-widest border flex items-center gap-4 ${
+              status.type === "error" 
+                ? (darkMode ? "bg-red-950/30 text-red-400 border-red-900/50" : "bg-red-50 text-red-500 border-red-100")
+                : (darkMode ? "bg-green-950/30 text-green-400 border-green-900/50" : "bg-green-50 text-green-600 border-green-100")
+            }`}>
+              <span className="text-xl">{status.type === "error" ? "⚠️" : "✅"}</span>
+              {status.message}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-start">
             
             {/* Left Column: Inputs */}

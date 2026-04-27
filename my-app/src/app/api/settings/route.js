@@ -1,7 +1,15 @@
-import { readDB, writeDB } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
 import cloudinary from "@/lib/cloudinary";
 import { unlink, access, constants } from "fs/promises";
 import path from "path";
+
+// Configure Cloudinary with your environment variables
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
 
 export async function POST(req) {
   try {
@@ -11,12 +19,15 @@ export async function POST(req) {
     const currency = formData.get("currency");
     const logoFile = formData.get("logo");
 
-    const db = await readDB();
-    let logoPath = db.settings?.logo || "https://res.cloudinary.com/du7wgettf/image/upload/v1/default.png";
-    let logoPublicId = db.settings?.logo_public_id || "";
+    // Initialize Supabase client
+    const supabase = await createClient();
+    const { data: settingsData } = await supabase.from("settings").select("*").maybeSingle();
+
+    let logoPath = settingsData?.logo || "https://res.cloudinary.com/du7wgettf/image/upload/v1/default.png";
+    let logoPublicId = settingsData?.logo_public_id || "";
 
     // 🖼️ HANDLE IMAGE UPLOAD
-    if (logoFile && typeof logoFile !== "string") {
+    if (logoFile && typeof logoFile !== "string" && logoFile.size > 0) {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
@@ -52,20 +63,32 @@ export async function POST(req) {
     }
 
     // 🔄 UPDATE SETTINGS (KEEPING EXISTING FIELDS)
-    db.settings = {
-      ...db.settings,
-      shopName: shopName || db.settings?.shopName,
-      currency: currency || db.settings?.currency,
+    const updatedSettings = {
+      shopName: shopName || settingsData?.shopName,
+      currency: currency || settingsData?.currency,
       logo: logoPath,
       logo_public_id: logoPublicId,
     };
 
-    // 💾 SAVE DB
-    await writeDB(db);
+    // 💾 SAVE TO SUPABASE
+    if (settingsData?.id) {
+      const { error: updateError } = await supabase
+        .from("settings")
+        .update(updatedSettings)
+        .eq("id", settingsData.id);
+
+      if (updateError) throw updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from("settings")
+        .insert([{ ...updatedSettings, id: 1 }]);
+
+      if (insertError) throw insertError;
+    }
 
     return Response.json({
       success: true,
-      settings: db.settings,
+      settings: updatedSettings,
     });
 
   } catch (err) {

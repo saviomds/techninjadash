@@ -8,6 +8,9 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState([]);
@@ -45,22 +48,65 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
     return filteredData.slice(start, start + itemsPerPage);
   }, [filteredData, currentPage]);
 
-  useEffect(() => {
+  const handleSearch = (query) => {
+    setSearchQuery(query);
     setCurrentPage(1);
-  }, [searchQuery]);
+  };
 
   const formatKey = (key) => key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-  const getImageSrc = (item) => item?.image || item?.logo || "/default-avatar.png";
+  
+  useEffect(() => {
+    if (imageFile) {
+      const url = URL.createObjectURL(imageFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [imageFile]);
+
+  const getImageSrc = (item) => {
+    if (item === formData && previewUrl) return previewUrl;
+    return item?.image || item?.logo || "/default-avatar.png";
+  };
   const isImageMissing = (item) => !item?.image && !item?.logo;
 
   const openModal = (item) => {
     setSelectedItem(item);
     let initialData = { ...item };
-    if (view === "orders" || view === "customers") {
-      if (!initialData.hasOwnProperty('description')) initialData.description = ""; 
+    // Ensure description is always available for relevant views
+    if (["orders", "customers", "products", "repairs", "staff"].includes(view?.toLowerCase())) {
+      if (!initialData.hasOwnProperty("description")) initialData.description = "";
     }
     setFormData(initialData);
     setEditMode(false);
+    setImageFile(null);
+    setIsSaving(false);
+    setStatus({ type: "", message: "" });
+    setErrors([]);
+  };
+
+  const openNewModal = () => {
+    setSelectedItem({ isNew: true });
+    let defaultData = {};
+    
+    const currentView = view?.toLowerCase() || "";
+    if (currentView === "products") {
+      defaultData = { name: "", price: "", stock: "", category: "", description: "" };
+    } else if (currentView === "customers") {
+      defaultData = { customer: "", email: "", phone: "", address: "", description: "" };
+    } else if (currentView === "staff") {
+      defaultData = { name: "", role: "", email: "", phone: "", description: "" };
+    } else if (currentView === "repairs") {
+      defaultData = { device: "", customer: "", status: "Pending", price: "", description: "" };
+    } else {
+      defaultData = { name: "", description: "" };
+    }
+    
+    setFormData(defaultData);
+    setEditMode(true);
+    setImageFile(null);
+    setIsSaving(false);
     setStatus({ type: "", message: "" });
     setErrors([]);
   };
@@ -70,6 +116,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
     setFormData({});
     setStatus({ type: "", message: "" });
     setErrors([]);
+    setImageFile(null);
   };
 
   const handleChange = (key, value) => {
@@ -83,7 +130,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
       {fullscreenImage && (
         <div className={`fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-md transition-colors ${darkMode ? "bg-black/95" : "bg-slate-950/90"}`} onClick={() => setFullscreenImage(null)}>
           <div className="relative w-full h-full max-w-4xl max-h-[80vh]">
-            <Image src={fullscreenImage} alt="Preview" fill className="object-contain animate-in zoom-in-95" priority />
+            <Image src={fullscreenImage} alt="Preview" fill sizes="100vw" className="object-contain animate-in zoom-in-95" priority unoptimized={fullscreenImage?.startsWith("blob:")} />
           </div>
         </div>
       )}
@@ -97,6 +144,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
           </h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-3">{filteredData.length} Records found</p>
         </div>
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         <div className="relative w-full sm:w-72">
           <input
             type="text"
@@ -107,9 +155,16 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
                 : "bg-white border-slate-200 text-slate-900 focus:border-blue-500 shadow-sm"
             }`}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">🔍</span>
+        </div>
+        <button 
+          onClick={openNewModal}
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20 transition-all whitespace-nowrap"
+        >
+          + Add New
+        </button>
         </div>
       </div>
 
@@ -118,7 +173,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
         <div className="overflow-x-auto pb-1 no-scrollbar">
           <div className="flex items-center gap-2 min-w-max px-1">
             <button
-               onClick={() => setSearchQuery("")}
+               onClick={() => handleSearch("")}
                className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border ${
                 searchQuery === "" 
                   ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-900/20" 
@@ -130,7 +185,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSearchQuery(cat)}
+                onClick={() => handleSearch(cat)}
                 className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border ${
                   searchQuery.toLowerCase() === cat.toLowerCase() 
                     ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-900/20" 
@@ -168,7 +223,7 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="relative w-12 h-12 flex-shrink-0 group/img" onClick={(e) => { e.stopPropagation(); setFullscreenImage(getImageSrc(item)); }}>
-                          <Image src={getImageSrc(item)} alt="item" fill className={`rounded-xl object-cover border transition-transform group-hover/img:scale-105 ${darkMode ? "border-slate-700" : "border-slate-100"}`} />
+                          <Image src={getImageSrc(item)} alt="item" fill sizes="48px" className={`rounded-xl object-cover border transition-transform group-hover/img:scale-105 ${darkMode ? "border-slate-700" : "border-slate-100"}`} unoptimized={getImageSrc(item)?.startsWith("blob:")} />
                         </div>
                         <div className="min-w-0">
                           <div className={`font-bold text-sm truncate max-w-[150px] sm:max-w-xs ${darkMode ? "text-white" : "text-slate-900"}`}>
@@ -266,10 +321,10 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
                   className={`relative w-16 h-16 cursor-pointer rounded-2xl overflow-hidden ring-4 transition-all ${darkMode ? "ring-slate-800 hover:ring-blue-600" : "ring-slate-50 hover:ring-blue-100"}`}
                   onClick={() => setFullscreenImage(getImageSrc(formData))}
                 >
-                  <Image src={getImageSrc(formData)} alt="preview" fill className="object-cover" />
+                  <Image src={getImageSrc(formData)} alt="preview" fill sizes="64px" className="object-cover" unoptimized={getImageSrc(formData)?.startsWith("blob:")} />
                 </div>
                 <div>
-                  <h3 className={`font-black text-sm uppercase tracking-[0.15em] ${darkMode ? "text-white" : "text-slate-900"}`}>Record Details</h3>
+              <h3 className={`font-black text-sm uppercase tracking-[0.15em] ${darkMode ? "text-white" : "text-slate-900"}`}>{selectedItem?.isNew ? "Create New Record" : "Record Details"}</h3>
                   <p className="text-[10px] text-blue-500 font-bold uppercase mt-1">Management Console</p>
                 </div>
               </div>
@@ -280,37 +335,120 @@ export default function Table({ data, view, deleteItem, onUpdate, darkMode }) {
 
             {/* Modal Body */}
             <div className="px-8 pb-8 space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {status.message && (
+                <div className={`p-4 rounded-xl text-[11px] font-black uppercase tracking-widest border flex items-center gap-3 ${
+                  status.type === "error" 
+                    ? (darkMode ? "bg-red-950/30 text-red-400 border-red-900/50" : "bg-red-50 text-red-500 border-red-100")
+                    : (darkMode ? "bg-green-950/30 text-green-400 border-green-900/50" : "bg-green-50 text-green-600 border-green-100")
+                }`}>
+                  <span className="text-base">{status.type === "error" ? "⚠️" : "✅"}</span>
+                  {status.message}
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Object.entries(formData).map(([key, value]) => {
                   if (["image", "logo", "id"].includes(key)) return null;
-                  const isLongText = String(value).length > 30;
+                  const isLongText = key === "description" || key === "address" || String(value).length > 30;
 
                   return (
                     <div key={key} className={isLongText ? "sm:col-span-2" : ""}>
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">{formatKey(key)}</label>
-                      <div className={`p-4 rounded-2xl text-sm font-bold border transition-colors ${
-                        darkMode 
-                          ? "bg-slate-800/40 border-slate-800 text-slate-200" 
-                          : "bg-slate-50/50 border-slate-100 text-slate-700"
-                      }`}>
-                        {value || <span className="opacity-30 italic">Not recorded</span>}
-                      </div>
+                      {editMode ? (
+                        key === "description" || key === "address" ? (
+                          <textarea
+                            value={value || ""}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            rows={3}
+                            className={`w-full p-4 rounded-2xl text-sm font-bold border transition-colors outline-none resize-none custom-scrollbar ${
+                              darkMode 
+                                ? "bg-slate-800/40 border-slate-700 text-slate-200 focus:border-blue-500" 
+                                : "bg-slate-50/50 border-slate-200 text-slate-700 focus:border-blue-500"
+                            }`}
+                          />
+                        ) : (
+                          <input
+                            type={key === "price" || key === "stock" ? "number" : key === "email" ? "email" : "text"}
+                            value={value || ""}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            className={`w-full p-4 rounded-2xl text-sm font-bold border transition-colors outline-none ${
+                              darkMode 
+                                ? "bg-slate-800/40 border-slate-700 text-slate-200 focus:border-blue-500" 
+                                : "bg-slate-50/50 border-slate-200 text-slate-700 focus:border-blue-500"
+                            }`}
+                          />
+                        )
+                      ) : (
+                        <div className={`p-4 rounded-2xl text-sm font-bold border transition-colors ${
+                          darkMode 
+                            ? "bg-slate-800/40 border-slate-800 text-slate-200" 
+                            : "bg-slate-50/50 border-slate-100 text-slate-700"
+                        }`}>
+                          {value || <span className="opacity-30 italic">Not recorded</span>}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
+              
+              {/* EXTRA IMAGE INPUT IN EDIT MODE */}
+              {editMode && (
+                <div className="sm:col-span-2 mt-4">
+                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1 block">Update Profile Image / Logo</label>
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={(e) => setImageFile(e.target.files[0])}
+                     className={`w-full p-3 rounded-2xl text-sm font-bold border transition-colors outline-none cursor-pointer ${
+                       darkMode 
+                         ? "bg-slate-800/40 border-slate-700 text-slate-200 focus:border-blue-500 file:bg-slate-700 file:text-slate-200 file:border-0 file:rounded-lg file:px-4 file:py-2 file:mr-4" 
+                         : "bg-slate-50/50 border-slate-200 text-slate-700 focus:border-blue-500 file:bg-white file:text-slate-700 file:border file:border-slate-200 file:rounded-lg file:px-4 file:py-2 file:mr-4"
+                     }`}
+                   />
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
             <div className={`p-8 border-t flex gap-3 transition-colors ${darkMode ? "border-slate-800 bg-slate-900" : "border-slate-50 bg-slate-50"}`}>
-               <button onClick={closeModal} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border transition-all ${
+               <button onClick={() => editMode ? setEditMode(false) : closeModal()} className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border transition-all ${
                   darkMode ? "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700" : "bg-white border-slate-200 text-slate-900 hover:bg-slate-50 shadow-sm"
                 }`}>
-                  Dismiss
+                  {editMode ? "Cancel" : "Dismiss"}
                 </button>
-                <button onClick={() => setEditMode(true)} className="flex-[1.5] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-all">
-                  Edit Registry
-                </button>
+                {editMode ? (
+                  <button 
+                  disabled={isSaving}
+                  onClick={async () => {
+                    if (onUpdate) {
+                      setIsSaving(true);
+                      setStatus({ type: "", message: "" });
+                      try {
+                        // Wait for Dashboard to process the save
+                        const res = await onUpdate(selectedItem?.isNew ? null : selectedItem.id, formData, imageFile);
+                        if (res && res.error) throw new Error(res.error);
+                        
+                        setEditMode(false);
+                        closeModal();
+                      } catch (err) {
+                        setStatus({ type: "error", message: err.message || "Failed to sync with database." });
+                      } finally {
+                      setIsSaving(false);
+                      }
+                    } else {
+                      setEditMode(false);
+                      closeModal();
+                    }
+                  }} 
+                  className="flex-[1.5] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/20 transition-all disabled:opacity-50"
+                  >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                  </button>
+                ) : (
+                  <button onClick={() => setEditMode(true)} className="flex-[1.5] py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-all">
+                    Edit Registry
+                  </button>
+                )}
             </div>
           </div>
         </div>
